@@ -7,7 +7,7 @@ autofocus algorithms. Refer to each subdirectory's `README` for details.
 
 All programs used in real time to collect radar data.
 
-## `clock`
+## `clock_sync`
 
 All programs used to synchronize the Hummingboard, Piksi GPS, and PulsON radar
 clocks.
@@ -38,3 +38,7 @@ Tutorial found online which executes basic Piksi GPS interfacing options.
 ## `sample_pulson_app`
 
 Sample C application which exectutes basic PulsON 410 interfacing options.
+
+## `support`
+
+A large library of helper MATLAB code used throughout.
