@@ -44,9 +44,13 @@
 % so long as each point has an [X Y Z] coordinate, there can be any number
 % of points in any arrangement that you choose...have fun!
 
- x0=kron((-20:20:20)',ones(3,1));     
- y0=kron(ones(3,1),(-20:20:20)');
- z0=[0;30;-30;30;0;-30;30;-30;0];
+% x0=kron((-20:20:20)',ones(3,1));     
+% y0=kron(ones(3,1),(-20:20:20)');
+% z0=[0;30;-30;30;0;-30;30;-30;0];
+
+x0 = 0;
+y0 = 0;
+z0 = 0;
 
 % x0 = linspace(-5,5,100)';
 % y0 = zeros(numel(x0),1);
@@ -61,8 +65,8 @@
 %z0 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]'
 
 % Other image parameters
-nX = 30;                       % # of points per row in synthetic aperture
-nY = 30;                       % # of rows in synthetic aperture
+nX = 20;                       % # of points per row in synthetic aperture
+nY = 20;                       % # of rows in synthetic aperture
 addNoise = true;               % true will inject GPS noise into aperture
 
 %% Generate SAR data with the given points 
@@ -72,8 +76,8 @@ PulseData = FormPulses(x0, y0, z0, nX, nY, addNoise);
 formedData = FormatPulseData(PulseData);
 
 %% Process formed data to create an image
-imgSize = [50 50 50];        % voxels [ X Y Z ]
-sceneSize = [100 100 100];      % meters [ X Y Z ] 
+imgSize = [10 10 10];        % voxels [ X Y Z ]
+sceneSize = [20 20 20];      % meters [ X Y Z ] 
 form_pulse_set = true;         % set to true if image is to be autofocused
 imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
 
@@ -83,16 +87,19 @@ imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
 % if the given data set is 3D, the image will not be autofocused
 if numel(size(imageSet)) == 4                 
     num_iter = 1;           % number of iterations to run autofocus
-    final_image = minEntropyAutoFocus(imageSet, num_iter);
+    % [focusedImage, minEntropy] = minEntropyAutoFocus(imageSet, num_iter);
+    [focusedImage, minEntropy] = minEntropyFminunc(imageSet, num_iter);
+    % focusedImage = imageSet;
 else 
-    final_image = imageSet;
+    focusedImage = imageSet;
 end 
 
-%% Display the final image
+% Display the final image
 
 dB = 10;
-ViewCube(final_image, dB);
+ViewCube(focusedImage, dB);
+fprintf('Min Entropy: %f\n', minEntropy);
 
-save imageCube.mat final_image -v7.3
+save imageCube.mat focusedImage -v7.3
 
 
