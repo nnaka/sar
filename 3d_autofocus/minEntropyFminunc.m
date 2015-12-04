@@ -44,7 +44,7 @@ function [grad] = gradH(phi_offsets, B)
 
     parfor k = 1:K
       % fprintf('Computing Z for k=%d\n', k);
-      Z = image(transpose(phi_offsets) + ident(:, k) * delta, B);
+      Z = image(phi_offsets + transpose(ident(:, k) * delta), B);
       grad(k) = (H(Z) - H_not) / delta;
     end
 end
@@ -60,14 +60,12 @@ end
 function [out] = image(phi_offsets, B) % defines z_vec(phi)
   X = size(B, 1); Y = size(B, 2); Z = size(B, 3);
   out = zeros(X, Y, Z);
-  K = size(B, 4);
+  K = numel(phi_offsets);
 
   for x = 1:X
       for y = 1:Y
           for z = 1:Z
-              for k = 1:K
-                out(x,y,z) = out(x,y,z) + sum(B(x,y,z,k) * exp(-1j * phi_offsets(k)));
-              end
+              out(x,y,z) = out(x,y,z) + sum(reshape(B(x,y,z,:), 1, K) .* exp(-1j .* phi_offsets));
           end
       end
   end
