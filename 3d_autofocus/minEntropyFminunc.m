@@ -12,8 +12,6 @@ function [ focusedImage, minEntropy ] = minEntropyFminunc( B, L )
 
   while (1) % phi_offsets(1) = 0
     phi_offsets(l, :) = phi_offsets(l - 1, :) - s * gradH(phi_offsets(l - 1, :), B);
-    
-    
     focusedImage = image(phi_offsets(l, :), B);
     tempEntropy = H(focusedImage);
     
@@ -24,7 +22,7 @@ function [ focusedImage, minEntropy ] = minEntropyFminunc( B, L )
     else
         break;
     end
-    
+    s = s / 1;
     l = l + 1;
   end
 end
@@ -44,8 +42,8 @@ function [grad] = gradH(phi_offsets, B)
     H_not = H(Z);
     fprintf('Computed H_not\n');
 
-    for k = 1:K
-      fprintf('Computing Z for k=%d\n', k);
+    parfor k = 1:K
+      % fprintf('Computing Z for k=%d\n', k);
       Z = image(transpose(phi_offsets) + ident(:, k) * delta, B);
       grad(k) = (H(Z) - H_not) / delta;
     end
