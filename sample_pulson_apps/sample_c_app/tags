@@ -1,0 +1,346 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+CFLAGS	Makefile	/^CFLAGS = -Wall$/;"	m
+DEFAULT_BASEII	mrmSampleApp.c	/^#define DEFAULT_BASEII	/;"	d	file:
+DEFAULT_RADIO_IP	mrmSampleApp.c	/^#define DEFAULT_RADIO_IP	/;"	d	file:
+DEFAULT_SCAN_COUNT	mrmSampleApp.c	/^#define DEFAULT_SCAN_COUNT	/;"	d	file:
+DEFAULT_SCAN_INTERVAL	mrmSampleApp.c	/^#define DEFAULT_SCAN_INTERVAL	/;"	d	file:
+DEFAULT_SCAN_START	mrmSampleApp.c	/^#define DEFAULT_SCAN_START	/;"	d	file:
+DEFAULT_SCAN_STOP	mrmSampleApp.c	/^#define DEFAULT_SCAN_STOP	/;"	d	file:
+DEFAULT_TIMEOUT_MS	mrmIf.c	/^#define DEFAULT_TIMEOUT_MS /;"	d	file:
+DEFAULT_TX_GAIN	mrmSampleApp.c	/^#define DEFAULT_TX_GAIN	/;"	d	file:
+ERR	mrmIf.h	/^#define ERR /;"	d
+FEATURESET	hostInterfaceMRM.h	/^#define FEATURESET	/;"	d
+FEATURE_INCLUDE_MRM	hostInterfaceMRM.h	/^#define FEATURE_INCLUDE_MRM	/;"	d
+MRM_ANTENNAMODE_DEFAULT	hostInterfaceCommon.h	/^#define MRM_ANTENNAMODE_DEFAULT	/;"	d
+MRM_ANTENNAMODE_TXA_RXA	hostInterfaceCommon.h	/^#define MRM_ANTENNAMODE_TXA_RXA	/;"	d
+MRM_ANTENNAMODE_TXA_RXB	hostInterfaceCommon.h	/^#define MRM_ANTENNAMODE_TXA_RXB	/;"	d
+MRM_ANTENNAMODE_TXB_RXA	hostInterfaceCommon.h	/^#define MRM_ANTENNAMODE_TXB_RXA	/;"	d
+MRM_ANTENNAMODE_TXB_RXB	hostInterfaceCommon.h	/^#define MRM_ANTENNAMODE_TXB_RXB	/;"	d
+MRM_CONFIRM_MSG_STATUS_GENERICFAILURE	hostInterfaceCommon.h	/^#define MRM_CONFIRM_MSG_STATUS_GENERICFAILURE	/;"	d
+MRM_CONFIRM_MSG_STATUS_SUCCESS	hostInterfaceCommon.h	/^#define MRM_CONFIRM_MSG_STATUS_SUCCESS	/;"	d
+MRM_CONFIRM_MSG_STATUS_UNSUPPORTEDVALUE	hostInterfaceCommon.h	/^#define MRM_CONFIRM_MSG_STATUS_UNSUPPORTEDVALUE	/;"	d
+MRM_CONFIRM_MSG_STATUS_WRONGOPMODE	hostInterfaceCommon.h	/^#define MRM_CONFIRM_MSG_STATUS_WRONGOPMODE	/;"	d
+MRM_CONNECTION_TYPE_NETWORK	hostInterfaceMRM.h	/^#define MRM_CONNECTION_TYPE_NETWORK /;"	d
+MRM_CONNECTION_TYPE_SERIAL	hostInterfaceMRM.h	/^#define MRM_CONNECTION_TYPE_SERIAL /;"	d
+MRM_CONNECTION_TYPE_USB	hostInterfaceMRM.h	/^#define MRM_CONNECTION_TYPE_USB /;"	d
+MRM_CONTROL_CONFIRM	hostInterfaceMRM.h	/^#define MRM_CONTROL_CONFIRM	/;"	d
+MRM_CONTROL_REQUEST	hostInterfaceMRM.h	/^#define MRM_CONTROL_REQUEST	/;"	d
+MRM_DETECTION_LIST_INFO	hostInterfaceMRM.h	/^#define MRM_DETECTION_LIST_INFO	/;"	d
+MRM_FILTER_DETECTIONLIST	hostInterfaceMRM.h	/^#define MRM_FILTER_DETECTIONLIST	/;"	d
+MRM_FILTER_FASTTIME	hostInterfaceMRM.h	/^#define MRM_FILTER_FASTTIME	/;"	d
+MRM_FILTER_MOTION	hostInterfaceMRM.h	/^#define MRM_FILTER_MOTION	/;"	d
+MRM_FILTER_RAW	hostInterfaceMRM.h	/^#define MRM_FILTER_RAW	/;"	d
+MRM_FULL_SCAN_INFO	hostInterfaceCommon.h	/^#define MRM_FULL_SCAN_INFO	/;"	d
+MRM_GET_CONFIG_CONFIRM	hostInterfaceMRM.h	/^#define MRM_GET_CONFIG_CONFIRM	/;"	d
+MRM_GET_CONFIG_REQUEST	hostInterfaceMRM.h	/^#define MRM_GET_CONFIG_REQUEST	/;"	d
+MRM_GET_FILTER_CONFIG_CONFIRM	hostInterfaceMRM.h	/^#define MRM_GET_FILTER_CONFIG_CONFIRM	/;"	d
+MRM_GET_FILTER_CONFIG_REQUEST	hostInterfaceMRM.h	/^#define MRM_GET_FILTER_CONFIG_REQUEST	/;"	d
+MRM_GET_OPMODE_CONFIRM	hostInterfaceCommon.h	/^#define MRM_GET_OPMODE_CONFIRM	/;"	d
+MRM_GET_OPMODE_REQUEST	hostInterfaceCommon.h	/^#define MRM_GET_OPMODE_REQUEST	/;"	d
+MRM_GET_SLEEP_MODE_CONFIRM	hostInterfaceCommon.h	/^#define MRM_GET_SLEEP_MODE_CONFIRM	/;"	d
+MRM_GET_SLEEP_MODE_REQUEST	hostInterfaceCommon.h	/^#define MRM_GET_SLEEP_MODE_REQUEST	/;"	d
+MRM_GET_STATUS_INFO_CONFIRM	hostInterfaceCommon.h	/^#define MRM_GET_STATUS_INFO_CONFIRM	/;"	d
+MRM_GET_STATUS_INFO_REQUEST	hostInterfaceCommon.h	/^#define MRM_GET_STATUS_INFO_REQUEST	/;"	d
+MRM_MAX_DETECTION_COUNT	hostInterfaceMRM.h	/^#define MRM_MAX_DETECTION_COUNT	/;"	d
+MRM_MAX_SCAN_SAMPLES	hostInterfaceCommon.h	/^#define MRM_MAX_SCAN_SAMPLES	/;"	d
+MRM_MOTION_FILTER_FIR2	hostInterfaceMRM.h	/^#define MRM_MOTION_FILTER_FIR2	/;"	d
+MRM_MOTION_FILTER_FIR3	hostInterfaceMRM.h	/^#define MRM_MOTION_FILTER_FIR3	/;"	d
+MRM_MOTION_FILTER_FIR4	hostInterfaceMRM.h	/^#define MRM_MOTION_FILTER_FIR4	/;"	d
+MRM_MOTION_FILTER_IIR3	hostInterfaceMRM.h	/^#define MRM_MOTION_FILTER_IIR3	/;"	d
+MRM_MSG_TYPE_CONFIRM	hostInterfaceMRM.h	/^#define MRM_MSG_TYPE_CONFIRM	/;"	d
+MRM_MSG_TYPE_INFO	hostInterfaceMRM.h	/^#define MRM_MSG_TYPE_INFO	/;"	d
+MRM_MSG_TYPE_REQUEST	hostInterfaceMRM.h	/^#define MRM_MSG_TYPE_REQUEST	/;"	d
+MRM_OPMODE_DEFAULT	hostInterfaceCommon.h	/^#define MRM_OPMODE_DEFAULT	/;"	d
+MRM_OPMODE_MRM	hostInterfaceCommon.h	/^#define MRM_OPMODE_MRM	/;"	d
+MRM_REBOOT_CONFIRM	hostInterfaceCommon.h	/^#define MRM_REBOOT_CONFIRM	/;"	d
+MRM_REBOOT_REQUEST	hostInterfaceCommon.h	/^#define MRM_REBOOT_REQUEST	/;"	d
+MRM_SCAN_FILTERING_FASTTIME	hostInterfaceCommon.h	/^#define MRM_SCAN_FILTERING_FASTTIME	/;"	d
+MRM_SCAN_FILTERING_MOTION	hostInterfaceCommon.h	/^#define MRM_SCAN_FILTERING_MOTION	/;"	d
+MRM_SCAN_FILTERING_RAW	hostInterfaceCommon.h	/^#define MRM_SCAN_FILTERING_RAW	/;"	d
+MRM_SERVER_CONNECTIONSTATUSCODE_CONNECTED	hostInterfaceMRM.h	/^#define MRM_SERVER_CONNECTIONSTATUSCODE_CONNECTED	/;"	d
+MRM_SERVER_CONNECTIONSTATUSCODE_GENERALERROR	hostInterfaceMRM.h	/^#define MRM_SERVER_CONNECTIONSTATUSCODE_GENERALERROR	/;"	d
+MRM_SERVER_CONNECTIONSTATUSCODE_MRMALREADYINUSE	hostInterfaceMRM.h	/^#define MRM_SERVER_CONNECTIONSTATUSCODE_MRMALREADYINUSE	/;"	d
+MRM_SERVER_CONNECT_CONFIRM	hostInterfaceMRM.h	/^#define MRM_SERVER_CONNECT_CONFIRM	/;"	d
+MRM_SERVER_CONNECT_REQUEST	hostInterfaceMRM.h	/^#define MRM_SERVER_CONNECT_REQUEST	/;"	d
+MRM_SERVER_DISCONNECT_CONFIRM	hostInterfaceMRM.h	/^#define MRM_SERVER_DISCONNECT_CONFIRM	/;"	d
+MRM_SERVER_DISCONNECT_REQUEST	hostInterfaceMRM.h	/^#define MRM_SERVER_DISCONNECT_REQUEST	/;"	d
+MRM_SET_CONFIG_CONFIRM	hostInterfaceMRM.h	/^#define MRM_SET_CONFIG_CONFIRM	/;"	d
+MRM_SET_CONFIG_REQUEST	hostInterfaceMRM.h	/^#define MRM_SET_CONFIG_REQUEST	/;"	d
+MRM_SET_FILTER_CONFIG_CONFIRM	hostInterfaceMRM.h	/^#define MRM_SET_FILTER_CONFIG_CONFIRM	/;"	d
+MRM_SET_FILTER_CONFIG_REQUEST	hostInterfaceMRM.h	/^#define MRM_SET_FILTER_CONFIG_REQUEST	/;"	d
+MRM_SET_OPMODE_CONFIRM	hostInterfaceCommon.h	/^#define MRM_SET_OPMODE_CONFIRM	/;"	d
+MRM_SET_OPMODE_REQUEST	hostInterfaceCommon.h	/^#define MRM_SET_OPMODE_REQUEST	/;"	d
+MRM_SET_SLEEP_MODE_CONFIRM	hostInterfaceCommon.h	/^#define MRM_SET_SLEEP_MODE_CONFIRM	/;"	d
+MRM_SET_SLEEP_MODE_REQUEST	hostInterfaceCommon.h	/^#define MRM_SET_SLEEP_MODE_REQUEST	/;"	d
+MRM_SLEEP_MODE_ACTIVE	hostInterfaceCommon.h	/^#define MRM_SLEEP_MODE_ACTIVE /;"	d
+MRM_SLEEP_MODE_IDLE	hostInterfaceCommon.h	/^#define MRM_SLEEP_MODE_IDLE /;"	d
+MRM_SLEEP_MODE_SLEEP	hostInterfaceCommon.h	/^#define MRM_SLEEP_MODE_SLEEP /;"	d
+MRM_SLEEP_MODE_STANDBY_ETH	hostInterfaceCommon.h	/^#define MRM_SLEEP_MODE_STANDBY_ETH /;"	d
+MRM_SLEEP_MODE_STANDBY_SER	hostInterfaceCommon.h	/^#define MRM_SLEEP_MODE_STANDBY_SER /;"	d
+MRM_SOCKET_PORT_NUM	hostInterfaceCommon.h	/^#define MRM_SOCKET_PORT_NUM /;"	d
+MRM_TXGAIN_MAX	hostInterfaceCommon.h	/^#define MRM_TXGAIN_MAX	/;"	d
+MRM_TXGAIN_MIN	hostInterfaceCommon.h	/^#define MRM_TXGAIN_MIN	/;"	d
+OK	mrmIf.h	/^#define OK /;"	d
+RCRM_MSG_TYPE_CONFIRM	hostInterfaceCommon.h	/^#define RCRM_MSG_TYPE_CONFIRM	/;"	d
+RCRM_MSG_TYPE_INFO	hostInterfaceCommon.h	/^#define RCRM_MSG_TYPE_INFO	/;"	d
+RCRM_MSG_TYPE_REQUEST	hostInterfaceCommon.h	/^#define RCRM_MSG_TYPE_REQUEST	/;"	d
+_CRT_SECURE_NO_WARNINGS	mrm.c	/^#define _CRT_SECURE_NO_WARNINGS$/;"	d	file:
+_CRT_SECURE_NO_WARNINGS	mrmIf.c	/^#define _CRT_SECURE_NO_WARNINGS$/;"	d	file:
+_CRT_SECURE_NO_WARNINGS	mrmSampleApp.c	/^#define _CRT_SECURE_NO_WARNINGS$/;"	d	file:
+__hostInterfaceCommon_h	hostInterfaceCommon.h	/^#define __hostInterfaceCommon_h$/;"	d
+__hostInterfaceMRM_h	hostInterfaceMRM.h	/^#define __hostInterfaceMRM_h$/;"	d
+__mrmIf_h	mrmIf.h	/^#define __mrmIf_h$/;"	d
+__mrm_h	mrm.h	/^#define __mrm_h$/;"	d
+antennaId	hostInterfaceCommon.h	/^	mrm_uint8_t antennaId;$/;"	m	struct:__anon14
+antennaMode	hostInterfaceMRM.h	/^	mrm_uint8_t antennaMode;$/;"	m	struct:__anon15
+appVersionBuild	hostInterfaceCommon.h	/^	mrm_uint16_t appVersionBuild;$/;"	m	struct:__anon2
+appVersionMajor	hostInterfaceCommon.h	/^	mrm_uint8_t appVersionMajor;$/;"	m	struct:__anon2
+appVersionMinor	hostInterfaceCommon.h	/^	mrm_uint8_t appVersionMinor;$/;"	m	struct:__anon2
+baseIntegrationIndex	hostInterfaceMRM.h	/^	mrm_uint16_t baseIntegrationIndex;$/;"	m	struct:__anon15
+bitResults	hostInterfaceCommon.h	/^	mrm_uint8_t bitResults;$/;"	m	struct:__anon2
+boardRev	hostInterfaceCommon.h	/^	mrm_uint8_t boardRev;$/;"	m	struct:__anon2
+channelRiseTime	hostInterfaceCommon.h	/^	mrm_uint32_t channelRiseTime;$/;"	m	struct:__anon14
+codeChannel	hostInterfaceMRM.h	/^	mrm_uint8_t codeChannel;$/;"	m	struct:__anon15
+config	hostInterfaceMRM.h	/^	mrmConfiguration config;$/;"	m	struct:__anon16
+config	hostInterfaceMRM.h	/^	mrmConfiguration config;$/;"	m	struct:__anon19
+connected	mrmSampleApp.c	/^static int haveServiceIp, connected;$/;"	v	file:
+connectionStatusCode	hostInterfaceMRM.h	/^	mrm_uint32_t connectionStatusCode;$/;"	m	struct:__anon24
+connectionType	hostInterfaceMRM.h	/^    mrm_uint8_t connectionType;$/;"	m	struct:__anon22
+crc16	mrmIf.c	/^static unsigned short crc16(void *ptr, int len)$/;"	f	file:
+crc16_tab	mrmIf.c	/^static const unsigned short crc16_tab[] = {$/;"	v	file:
+detectionList	mrm.h	/^        mrmMsg_DetectionListInfo    detectionList;$/;"	m	union:__anon33::__anon34
+detectionListThresholdMult	hostInterfaceMRM.h	/^	mrm_uint8_t detectionListThresholdMult;$/;"	m	struct:__anon27
+detectionListThresholdMult	hostInterfaceMRM.h	/^	mrm_uint8_t detectionListThresholdMult;$/;"	m	struct:__anon30
+detectionListThresholdMult	mrm.h	/^	mrm_uint8_t detectionListThresholdMult;$/;"	m	struct:__anon35
+detections	hostInterfaceMRM.h	/^	} detections[MRM_MAX_DETECTION_COUNT];$/;"	m	struct:__anon31	typeref:struct:__anon31::__anon32
+featureSet	hostInterfaceCommon.h	/^	mrm_uint8_t featureSet;$/;"	m	struct:__anon2
+filterFlags	hostInterfaceMRM.h	/^	mrm_uint16_t filterFlags;$/;"	m	struct:__anon27
+filterFlags	hostInterfaceMRM.h	/^	mrm_uint16_t filterFlags;$/;"	m	struct:__anon30
+filterFlags	mrm.h	/^	mrm_uint16_t filterFlags;$/;"	m	struct:__anon35
+firmwareDay	hostInterfaceCommon.h	/^	mrm_uint8_t firmwareDay;$/;"	m	struct:__anon2
+firmwareMonth	hostInterfaceCommon.h	/^	mrm_uint8_t firmwareMonth;$/;"	m	struct:__anon2
+firmwareVersion	hostInterfaceCommon.h	/^	mrm_uint8_t firmwareVersion;$/;"	m	struct:__anon2
+firmwareYear	hostInterfaceCommon.h	/^	mrm_uint8_t firmwareYear;$/;"	m	struct:__anon2
+hComm	mrmIf.c	/^static HANDLE hComm;$/;"	v	file:
+haveServiceIp	mrmSampleApp.c	/^static int haveServiceIp, connected;$/;"	v	file:
+index	hostInterfaceMRM.h	/^		mrm_uint16_t index;$/;"	m	struct:__anon31::__anon32
+ledIndex	hostInterfaceCommon.h	/^	mrm_int32_t ledIndex;$/;"	m	struct:__anon14
+lockspotOffset	hostInterfaceCommon.h	/^	mrm_int32_t lockspotOffset;$/;"	m	struct:__anon14
+magnitude	hostInterfaceMRM.h	/^		mrm_uint16_t magnitude;$/;"	m	struct:__anon31::__anon32
+main	mrmSampleApp.c	/^int main(int argc, char *argv[])$/;"	f
+messageIndex	hostInterfaceCommon.h	/^	mrm_uint16_t messageIndex;$/;"	m	struct:__anon14
+motionFilterIndex	hostInterfaceMRM.h	/^	mrm_uint8_t motionFilterIndex;$/;"	m	struct:__anon27
+motionFilterIndex	hostInterfaceMRM.h	/^	mrm_uint8_t motionFilterIndex;$/;"	m	struct:__anon30
+motionFilterIndex	mrm.h	/^	mrm_uint8_t motionFilterIndex;$/;"	m	struct:__anon35
+mrmConfigGet	mrm.c	/^int mrmConfigGet(mrmConfiguration *config)$/;"	f
+mrmConfigSet	mrm.c	/^int mrmConfigSet(mrmConfiguration *config)$/;"	f
+mrmConfiguration	hostInterfaceMRM.h	/^} mrmConfiguration;$/;"	t	typeref:struct:__anon15
+mrmConnect	mrm.c	/^int mrmConnect(int connType, char *addr, mrm_uint32_t *connectionStatusCode)$/;"	f
+mrmControl	mrm.c	/^int mrmControl(mrm_uint16_t msrScanCount, mrm_uint32_t msrIntervalTimeUs)$/;"	f
+mrmDisconnect	mrm.c	/^int mrmDisconnect(void)$/;"	f
+mrmFilterConfig	mrm.h	/^} mrmFilterConfig;$/;"	t	typeref:struct:__anon35
+mrmFilterConfigGet	mrm.c	/^int mrmFilterConfigGet(mrmFilterConfig *config)$/;"	f
+mrmFilterConfigSet	mrm.c	/^int mrmFilterConfigSet(mrmFilterConfig *config)$/;"	f
+mrmIPAddr	hostInterfaceMRM.h	/^        mrm_uint32_t mrmIPAddr;$/;"	m	union:__anon22::__anon23
+mrmIf	mrmIf.c	/^static mrmIfType            mrmIf;$/;"	v	file:
+mrmIfClose	mrmIf.c	/^void mrmIfClose(void)$/;"	f
+mrmIfFlush	mrmIf.c	/^void mrmIfFlush(void)$/;"	f
+mrmIfGetPacket	mrmIf.c	/^int mrmIfGetPacket(void *pkt, unsigned maxSize)$/;"	f
+mrmIfGetPacketIp	mrmIf.c	/^static int mrmIfGetPacketIp(void *pkt, unsigned maxSize)$/;"	f	file:
+mrmIfGetPacketSerial	mrmIf.c	/^static int mrmIfGetPacketSerial(void *pkt, unsigned maxSize)$/;"	f	file:
+mrmIfInit	mrmIf.c	/^int mrmIfInit(mrmIfType ifType, char *destAddr)$/;"	f
+mrmIfIp	mrmIf.h	/^typedef enum {mrmIfIp, mrmIfSerial, mrmIfUsb} mrmIfType;$/;"	e	enum:__anon36
+mrmIfSendPacket	mrmIf.c	/^int mrmIfSendPacket(void *pkt, unsigned size)$/;"	f
+mrmIfSendPacketIp	mrmIf.c	/^static int mrmIfSendPacketIp(void *pkt, unsigned size)$/;"	f	file:
+mrmIfSendPacketSerial	mrmIf.c	/^static int mrmIfSendPacketSerial(void *pkt, unsigned size)$/;"	f	file:
+mrmIfSerial	mrmIf.h	/^typedef enum {mrmIfIp, mrmIfSerial, mrmIfUsb} mrmIfType;$/;"	e	enum:__anon36
+mrmIfTimeoutMsSet	mrmIf.c	/^void mrmIfTimeoutMsSet(int tmoMs)$/;"	f
+mrmIfType	mrmIf.h	/^typedef enum {mrmIfIp, mrmIfSerial, mrmIfUsb} mrmIfType;$/;"	t	typeref:enum:__anon36
+mrmIfUsb	mrmIf.h	/^typedef enum {mrmIfIp, mrmIfSerial, mrmIfUsb} mrmIfType;$/;"	e	enum:__anon36
+mrmInfo	mrm.h	/^} mrmInfo;$/;"	t	typeref:struct:__anon33
+mrmInfoGet	mrm.c	/^int mrmInfoGet(int timeoutMs, mrmInfo *info)$/;"	f
+mrmMsg_ControlConfirm	hostInterfaceMRM.h	/^} mrmMsg_ControlConfirm;$/;"	t	typeref:struct:__anon21
+mrmMsg_ControlRequest	hostInterfaceMRM.h	/^} mrmMsg_ControlRequest;$/;"	t	typeref:struct:__anon20
+mrmMsg_DetectionListInfo	hostInterfaceMRM.h	/^} mrmMsg_DetectionListInfo;$/;"	t	typeref:struct:__anon31
+mrmMsg_FullScanInfo	hostInterfaceCommon.h	/^} mrmMsg_FullScanInfo;$/;"	t	typeref:struct:__anon14
+mrmMsg_GetConfigConfirm	hostInterfaceMRM.h	/^} mrmMsg_GetConfigConfirm;$/;"	t	typeref:struct:__anon19
+mrmMsg_GetConfigRequest	hostInterfaceMRM.h	/^} mrmMsg_GetConfigRequest;$/;"	t	typeref:struct:__anon18
+mrmMsg_GetFilterConfigConfirm	hostInterfaceMRM.h	/^} mrmMsg_GetFilterConfigConfirm;$/;"	t	typeref:struct:__anon30
+mrmMsg_GetFilterConfigRequest	hostInterfaceMRM.h	/^} mrmMsg_GetFilterConfigRequest;$/;"	t	typeref:struct:__anon29
+mrmMsg_GetOpmodeConfirm	hostInterfaceCommon.h	/^} mrmMsg_GetOpmodeConfirm;$/;"	t	typeref:struct:__anon8
+mrmMsg_GetOpmodeRequest	hostInterfaceCommon.h	/^} mrmMsg_GetOpmodeRequest;$/;"	t	typeref:struct:__anon7
+mrmMsg_GetSleepModeConfirm	hostInterfaceCommon.h	/^} mrmMsg_GetSleepModeConfirm;$/;"	t	typeref:struct:__anon12
+mrmMsg_GetSleepModeRequest	hostInterfaceCommon.h	/^} mrmMsg_GetSleepModeRequest;$/;"	t	typeref:struct:__anon11
+mrmMsg_GetStatusInfoConfirm	hostInterfaceCommon.h	/^} mrmMsg_GetStatusInfoConfirm;$/;"	t	typeref:struct:__anon2
+mrmMsg_GetStatusInfoRequest	hostInterfaceCommon.h	/^} mrmMsg_GetStatusInfoRequest;$/;"	t	typeref:struct:__anon1
+mrmMsg_ReadyInfo	hostInterfaceCommon.h	/^} mrmMsg_ReadyInfo;$/;"	t	typeref:struct:__anon13
+mrmMsg_RebootConfirm	hostInterfaceCommon.h	/^} mrmMsg_RebootConfirm;$/;"	t	typeref:struct:__anon4
+mrmMsg_RebootRequest	hostInterfaceCommon.h	/^} mrmMsg_RebootRequest;$/;"	t	typeref:struct:__anon3
+mrmMsg_ServerConnectConfirm	hostInterfaceMRM.h	/^} mrmMsg_ServerConnectConfirm;$/;"	t	typeref:struct:__anon24
+mrmMsg_ServerConnectRequest	hostInterfaceMRM.h	/^} mrmMsg_ServerConnectRequest;$/;"	t	typeref:struct:__anon22
+mrmMsg_ServerDisconnectConfirm	hostInterfaceMRM.h	/^} mrmMsg_ServerDisconnectConfirm;$/;"	t	typeref:struct:__anon26
+mrmMsg_ServerDisconnectRequest	hostInterfaceMRM.h	/^} mrmMsg_ServerDisconnectRequest;$/;"	t	typeref:struct:__anon25
+mrmMsg_SetConfigConfirm	hostInterfaceMRM.h	/^} mrmMsg_SetConfigConfirm;$/;"	t	typeref:struct:__anon17
+mrmMsg_SetConfigRequest	hostInterfaceMRM.h	/^} mrmMsg_SetConfigRequest;$/;"	t	typeref:struct:__anon16
+mrmMsg_SetFilterConfigConfirm	hostInterfaceMRM.h	/^} mrmMsg_SetFilterConfigConfirm;$/;"	t	typeref:struct:__anon28
+mrmMsg_SetFilterConfigRequest	hostInterfaceMRM.h	/^} mrmMsg_SetFilterConfigRequest;$/;"	t	typeref:struct:__anon27
+mrmMsg_SetOpmodeConfirm	hostInterfaceCommon.h	/^} mrmMsg_SetOpmodeConfirm;$/;"	t	typeref:struct:__anon6
+mrmMsg_SetOpmodeRequest	hostInterfaceCommon.h	/^} mrmMsg_SetOpmodeRequest;$/;"	t	typeref:struct:__anon5
+mrmMsg_SetSleepModeConfirm	hostInterfaceCommon.h	/^} mrmMsg_SetSleepModeConfirm;$/;"	t	typeref:struct:__anon10
+mrmMsg_SetSleepModeRequest	hostInterfaceCommon.h	/^} mrmMsg_SetSleepModeRequest;$/;"	t	typeref:struct:__anon9
+mrmOpmodeGet	mrm.c	/^int mrmOpmodeGet(int *mode)$/;"	f
+mrmOpmodeSet	mrm.c	/^int mrmOpmodeSet(int mode)$/;"	f
+mrmPort	hostInterfaceMRM.h	/^    mrm_uint16_t mrmPort;$/;"	m	struct:__anon22
+mrmSampleExit	mrmSampleApp.c	/^static void mrmSampleExit(void)$/;"	f	file:
+mrmSerialPortNum	hostInterfaceMRM.h	/^        mrm_uint32_t mrmSerialPortNum;$/;"	m	union:__anon22::__anon23
+mrmSleepModeGet	mrm.c	/^int mrmSleepModeGet(int *mode)$/;"	f
+mrmSleepModeSet	mrm.c	/^int mrmSleepModeSet(int mode)$/;"	f
+mrmStatusInfoGet	mrm.c	/^int mrmStatusInfoGet(mrmMsg_GetStatusInfoConfirm *confirm)$/;"	f
+mrmUSBPortNum	hostInterfaceMRM.h	/^        mrm_uint32_t mrmUSBPortNum;$/;"	m	union:__anon22::__anon23
+mrm_int16_t	hostInterfaceCommon.h	/^typedef	short					mrm_int16_t;$/;"	t
+mrm_int16_t	hostInterfaceCommon.h	/^typedef signed __int16    mrm_int16_t;$/;"	t
+mrm_int16_t	hostInterfaceCommon.h	/^typedef signed short      mrm_int16_t;$/;"	t
+mrm_int32_t	hostInterfaceCommon.h	/^typedef	int						mrm_int32_t;$/;"	t
+mrm_int32_t	hostInterfaceCommon.h	/^typedef signed __int32    mrm_int32_t;$/;"	t
+mrm_int32_t	hostInterfaceCommon.h	/^typedef signed int        mrm_int32_t;$/;"	t
+mrm_int64_t	hostInterfaceCommon.h	/^typedef	long long				mrm_int64_t;$/;"	t
+mrm_int64_t	hostInterfaceCommon.h	/^typedef signed __int64       mrm_int64_t;$/;"	t
+mrm_int8_t	hostInterfaceCommon.h	/^typedef	__signed char			mrm_int8_t;$/;"	t
+mrm_int8_t	hostInterfaceCommon.h	/^typedef signed __int8     mrm_int8_t;$/;"	t
+mrm_int8_t	hostInterfaceCommon.h	/^typedef signed char       mrm_int8_t;$/;"	t
+mrm_uint16_t	hostInterfaceCommon.h	/^typedef	unsigned short			mrm_uint16_t;$/;"	t
+mrm_uint16_t	hostInterfaceCommon.h	/^typedef unsigned __int16  mrm_uint16_t;$/;"	t
+mrm_uint16_t	hostInterfaceCommon.h	/^typedef unsigned short    mrm_uint16_t;$/;"	t
+mrm_uint32_t	hostInterfaceCommon.h	/^typedef	unsigned int			mrm_uint32_t;$/;"	t
+mrm_uint32_t	hostInterfaceCommon.h	/^typedef unsigned __int32  mrm_uint32_t;$/;"	t
+mrm_uint32_t	hostInterfaceCommon.h	/^typedef unsigned int      mrm_uint32_t;$/;"	t
+mrm_uint64_t	hostInterfaceCommon.h	/^typedef	unsigned long long		mrm_uint64_t;$/;"	t
+mrm_uint64_t	hostInterfaceCommon.h	/^typedef unsigned __int64     mrm_uint64_t;$/;"	t
+mrm_uint8_t	hostInterfaceCommon.h	/^typedef	unsigned char			mrm_uint8_t;$/;"	t
+mrm_uint8_t	hostInterfaceCommon.h	/^typedef unsigned __int8   mrm_uint8_t;$/;"	t
+mrm_uint8_t	hostInterfaceCommon.h	/^typedef unsigned char     mrm_uint8_t;$/;"	t
+msg	mrm.h	/^    } msg;$/;"	m	struct:__anon33	typeref:union:__anon33::__anon34
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon1
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon10
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon11
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon12
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon13
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon14
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon2
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon3
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon4
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon5
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon6
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon7
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon8
+msgId	hostInterfaceCommon.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon9
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon16
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon17
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon18
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon19
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon20
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon21
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon24
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon25
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon26
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon27
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon28
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon29
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon30
+msgId	hostInterfaceMRM.h	/^	mrm_uint16_t msgId;$/;"	m	struct:__anon31
+msgId	hostInterfaceMRM.h	/^    mrm_uint16_t msgId;$/;"	m	struct:__anon22
+msgIdCount	mrm.c	/^static int msgIdCount;$/;"	v	file:
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon1
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon10
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon11
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon12
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon13
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon14
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon2
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon3
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon4
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon5
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon6
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon7
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon8
+msgType	hostInterfaceCommon.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon9
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon16
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon17
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon18
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon19
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon20
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon21
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon24
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon25
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon26
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon27
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon28
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon29
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon30
+msgType	hostInterfaceMRM.h	/^	mrm_uint16_t msgType;$/;"	m	struct:__anon31
+msgType	hostInterfaceMRM.h	/^    mrm_uint16_t msgType;$/;"	m	struct:__anon22
+msrIntervalTimeMicroseconds	hostInterfaceMRM.h	/^	mrm_uint32_t msrIntervalTimeMicroseconds;$/;"	m	struct:__anon20
+msrScanCount	hostInterfaceMRM.h	/^	mrm_uint16_t msrScanCount;$/;"	m	struct:__anon20
+nodeId	hostInterfaceMRM.h	/^	mrm_uint32_t nodeId;$/;"	m	struct:__anon15
+numDetections	hostInterfaceMRM.h	/^	mrm_uint16_t numDetections;$/;"	m	struct:__anon31
+numMessagesTotal	hostInterfaceCommon.h	/^	mrm_uint16_t numMessagesTotal;$/;"	m	struct:__anon14
+numSamplesInMessage	hostInterfaceCommon.h	/^	mrm_uint16_t numSamplesInMessage;$/;"	m	struct:__anon14
+numSamplesTotal	hostInterfaceCommon.h	/^	mrm_uint32_t numSamplesTotal;$/;"	m	struct:__anon14
+opMode	hostInterfaceCommon.h	/^	mrm_uint32_t opMode;$/;"	m	struct:__anon5
+opMode	hostInterfaceCommon.h	/^	mrm_uint32_t opMode;$/;"	m	struct:__anon6
+opMode	hostInterfaceCommon.h	/^	mrm_uint32_t opMode;$/;"	m	struct:__anon8
+operationMode	hostInterfaceCommon.h	/^	mrm_uint8_t operationMode;$/;"	m	struct:__anon14
+packageVersionStr	hostInterfaceCommon.h	/^    char packageVersionStr[32];$/;"	m	struct:__anon2
+persistFlag	hostInterfaceMRM.h	/^	mrm_uint8_t persistFlag;$/;"	m	struct:__anon15
+processInfo	mrmSampleApp.c	/^static void processInfo(mrmInfo *info, FILE *fp, int printInfo)$/;"	f	file:
+radioAddr	mrmIf.c	/^static struct sockaddr_in   radioAddr;$/;"	v	typeref:struct:sockaddr_in	file:
+radioFd	mrmIf.c	/^static int                  radioFd;$/;"	v	file:
+reserved	hostInterfaceCommon.h	/^	mrm_uint8_t reserved;	\/\/ alignment$/;"	m	struct:__anon14
+reserved	hostInterfaceCommon.h	/^	mrm_uint8_t reserved;$/;"	m	struct:__anon2
+reserved	hostInterfaceMRM.h	/^	mrm_uint16_t reserved;$/;"	m	struct:__anon20
+reserved	hostInterfaceMRM.h	/^	mrm_uint16_t reserved;$/;"	m	struct:__anon31
+reserved	hostInterfaceMRM.h	/^    mrm_uint8_t reserved;$/;"	m	struct:__anon22
+scan	hostInterfaceCommon.h	/^	mrm_int32_t scan[MRM_MAX_SCAN_SAMPLES];$/;"	m	struct:__anon14
+scan	mrm.h	/^    mrm_int32_t *scan; \/\/ not valid for detection messages$/;"	m	struct:__anon33
+scanEndPs	hostInterfaceMRM.h	/^	mrm_int32_t scanEndPs;$/;"	m	struct:__anon15
+scanFiltering	hostInterfaceCommon.h	/^	mrm_uint8_t scanFiltering;$/;"	m	struct:__anon14
+scanInfo	mrm.h	/^        mrmMsg_FullScanInfo         scanInfo;$/;"	m	union:__anon33::__anon34
+scanResolutionBins	hostInterfaceMRM.h	/^	mrm_uint16_t scanResolutionBins;$/;"	m	struct:__anon15
+scanSNRLinear	hostInterfaceCommon.h	/^	mrm_uint32_t scanSNRLinear;$/;"	m	struct:__anon14
+scanStartPs	hostInterfaceCommon.h	/^	mrm_int32_t scanStartPs;$/;"	m	struct:__anon14
+scanStartPs	hostInterfaceMRM.h	/^	mrm_int32_t scanStartPs;$/;"	m	struct:__anon15
+scanStepBins	hostInterfaceCommon.h	/^	mrm_uint16_t scanStepBins;$/;"	m	struct:__anon14
+scanStopPs	hostInterfaceCommon.h	/^	mrm_int32_t scanStopPs;$/;"	m	struct:__anon14
+segmentIntMult	hostInterfaceMRM.h	/^	mrm_uint8_t segmentIntMult[4];$/;"	m	struct:__anon15
+segmentNumSamples	hostInterfaceMRM.h	/^	mrm_uint16_t segmentNumSamples[4];$/;"	m	struct:__anon15
+serTimedRead	mrmIf.c	/^static int serTimedRead(void *buf, int cnt)$/;"	f	file:
+serWrite	mrmIf.c	/^static int serWrite(void *buf, int cnt)$/;"	f	file:
+serialNum	hostInterfaceCommon.h	/^	mrm_uint32_t serialNum;$/;"	m	struct:__anon2
+sleepMode	hostInterfaceCommon.h	/^	mrm_uint32_t sleepMode;$/;"	m	struct:__anon12
+sleepMode	hostInterfaceCommon.h	/^	mrm_uint32_t sleepMode;$/;"	m	struct:__anon9
+sourceId	hostInterfaceCommon.h	/^	mrm_uint32_t sourceId;$/;"	m	struct:__anon14
+status	hostInterfaceCommon.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon10
+status	hostInterfaceCommon.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon2
+status	hostInterfaceCommon.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon6
+status	hostInterfaceMRM.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon17
+status	hostInterfaceMRM.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon19
+status	hostInterfaceMRM.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon21
+status	hostInterfaceMRM.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon26
+status	hostInterfaceMRM.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon28
+status	hostInterfaceMRM.h	/^	mrm_uint32_t status;$/;"	m	struct:__anon30
+strcasecmp	mrm.c	/^    #define strcasecmp /;"	d	file:
+strncasecmp	mrm.c	/^    #define strncasecmp /;"	d	file:
+temperature	hostInterfaceCommon.h	/^	mrm_int32_t temperature;$/;"	m	struct:__anon2
+timeoutMs	mrmIf.c	/^static int timeoutMs = DEFAULT_TIMEOUT_MS;$/;"	v	file:
+timestamp	hostInterfaceCommon.h	/^	mrm_uint32_t timestamp;$/;"	m	struct:__anon14
+timestamp	hostInterfaceMRM.h	/^	mrm_uint32_t timestamp;$/;"	m	struct:__anon19
+txGain	hostInterfaceMRM.h	/^	mrm_uint8_t txGain;$/;"	m	struct:__anon15
+usage	mrmSampleApp.c	/^static void usage(void)$/;"	f	file:
+uwbKernelVersionBuild	hostInterfaceCommon.h	/^	mrm_uint16_t uwbKernelVersionBuild;$/;"	m	struct:__anon2
+uwbKernelVersionMajor	hostInterfaceCommon.h	/^	mrm_uint8_t uwbKernelVersionMajor;$/;"	m	struct:__anon2
+uwbKernelVersionMinor	hostInterfaceCommon.h	/^	mrm_uint8_t uwbKernelVersionMinor;$/;"	m	struct:__anon2
