@@ -1,4 +1,4 @@
-function [ focused_image ] = minEntropyAutoFocus( pulseSet, numIterations )
+function [ focused_image, minEntropy ] = minEntropyAutoFocus( pulseSet, numIterations )
 
 % Minimum Entropy Auto Focus
 %
@@ -87,18 +87,18 @@ for iter = 1:numIterations
         scan_iter(:,:,:,pulseIdx) = scanSet(:,:,:,pulseIdx) * exp(1j*phi_offsets(pulseIdx));
         allEntropies(pulseIdx + (iter-1)*numIterations) = findEntropy(sum(scan_iter,4));
         
-        fprintf('Entropy: %f\n', allEntropies(pulseIdx + (iter-1)*numIterations));
+        % fprintf('Entropy: %f\n', allEntropies(pulseIdx + (iter-1)*numIterations));
         
     end 
 
     % save an image for each iteration 
-    img_iter = sum(scan_iter,4);
-    if iter == numIterations
-        filename = sprintf('finalImage');
-    else 
-        filename = sprintf('focusedImageIter_%d', iter);
-    end
-    save(filename, 'img_iter');
+    % img_iter = sum(scan_iter,4);
+    % if iter == numIterations
+    %     filename = sprintf('finalImage');
+    % else 
+    %     filename = sprintf('focusedImageIter_%d', iter);
+    % end
+    % save(filename, 'img_iter');
 
 end
 
