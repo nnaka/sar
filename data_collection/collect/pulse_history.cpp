@@ -1,10 +1,8 @@
 #include "pulse_history.h"
 
-PulseHistory::PulseHistory() {
-    // stub
-}
+using namespace std;
 
-PulseHistory::PulseHistory(const char *gps_port, const char *radar_port) {
+PulseHistory::PulseHistory(const string &gps_port, const string &radar_port) {
     (void)gps_port, (void)radar_port;
     
     // stub

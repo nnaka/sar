@@ -3,10 +3,11 @@
 // pulse_history.h
 // PulseHistory collects synchronized data from a GPS and radar
 
+#include <string>
+
 class PulseHistory {
     public:
-        PulseHistory();
-        PulseHistory(const char *, const char *);
+        PulseHistory(const std::string &, const std::string &);
 
         void collect();
     private:

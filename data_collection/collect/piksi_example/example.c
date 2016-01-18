@@ -197,7 +197,7 @@ int main(int argc, char **argv)
     sbp_process(&s, &piksi_port_read);
 
     /* Print data from messages received from Piksi. */
-    DO_EVERY(1,
+    DO_EVERY(1000,
 
       str_i = 0;
       memset(str, 0, sizeof(str));

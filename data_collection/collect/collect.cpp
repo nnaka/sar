@@ -22,8 +22,6 @@
     * Add exception handling around `collect()`
     * Implement `check_for()`
     * Add DEBUG macro
-    * Change PulseHistory(const char *, const char *) => PulseHistory(const
-        string &, const string &)
  */
 
 const int NUM_ARGS = 4;
