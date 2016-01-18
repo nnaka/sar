@@ -31,6 +31,9 @@ msg_gps_time_t     gps_time;
  * SBP callback nodes must be statically allocated. Each message ID / callback
  * pair must have a unique sbp_msg_callbacks_node_t associated with it.
  */
+#define NUM_CALLBACKS 5 // ignore heartbeat
+
+static int callbacks_rcvd = 0;
 static sbp_msg_callbacks_node_t heartbeat_callback_node;
 static sbp_msg_callbacks_node_t pos_llh_node;
 static sbp_msg_callbacks_node_t baseline_ned_node;
@@ -92,26 +95,31 @@ void heartbeat_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 void sbp_pos_llh_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 {
   pos_llh = *(msg_pos_llh_t *)msg;
+  ++callbacks_rcvd;
   (void)sender_id, (void)len, (void)context;
 }
 void sbp_baseline_ned_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 {
   baseline_ned = *(msg_baseline_ned_t *)msg;
+  ++callbacks_rcvd;
   (void)sender_id, (void)len, (void)context;
 }
 void sbp_vel_ned_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 {
   vel_ned = *(msg_vel_ned_t *)msg;
+  ++callbacks_rcvd;
   (void)sender_id, (void)len, (void)context;
 }
 void sbp_dops_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 {
   dops = *(msg_dops_t *)msg;
+  ++callbacks_rcvd;
   (void)sender_id, (void)len, (void)context;
 }
 void sbp_gps_time_callback(u16 sender_id, u8 len, u8 msg[], void *context)
 {
   gps_time = *(msg_gps_time_t *)msg;
+  ++callbacks_rcvd;
   (void)sender_id, (void)len, (void)context;
 }
 
@@ -194,11 +202,15 @@ int main(int argc, char **argv)
   int str_i;
 
   while(1) {
-    sbp_process(&s, &piksi_port_read);
+      sbp_process(&s, &piksi_port_read);
 
-    /* Print data from messages received from Piksi. */
-    DO_EVERY(1000,
+      if (callbacks_rcvd != NUM_CALLBACKS - 1) {
+          continue;
+      }
 
+      callbacks_rcvd = 0;
+
+      /* Print data from messages received from Piksi. */
       str_i = 0;
       memset(str, 0, sizeof(str));
 
@@ -207,7 +219,7 @@ int main(int argc, char **argv)
       /* Print GPS time. */
       str_i += sprintf(str + str_i, "GPS Time:\n");
       str_i += sprintf(str + str_i, "\tWeek\t\t: %6d\n", (int)gps_time.wn);
-      sprintf(rj, "%6.2f", ((float)gps_time.tow)/1e3);
+      sprintf(rj, "%6.10f", ((float)gps_time.tow + ((float)gps_time.ns/1e6))/1e3);
       str_i += sprintf(str + str_i, "\tSeconds\t: %9s\n", rj);
       str_i += sprintf(str + str_i, "\n");
 
@@ -253,7 +265,6 @@ int main(int argc, char **argv)
       printf("\033[H");
       printf("\033[2J");
       printf("%s", str);
-    );
   }
 
   result = sp_close(piksi_port);
