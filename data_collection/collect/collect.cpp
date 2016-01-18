@@ -15,16 +15,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h> // struct sockaddr_in
 
+#include "debug.h"
 #include "pulse_history.h"
 
 /*
  TODO
     * Add exception handling around `collect()`
     * Implement `check_for()`
-    * Add DEBUG macro
  */
 
-const int NUM_ARGS = 4;
+const int NUM_ARGS = 3;
 enum Message { START_COLLECT, STOP_COLLECT };
 
 inline void usage(const char *prog_name) {
@@ -57,6 +57,7 @@ int setup_connection(int port) {
 
     serverfd = socket(AF_INET, SOCK_STREAM, 0);
     check_or_exit(serverfd < 0, "socket");
+    LOG("serverfd = %d", serverfd);
 
     // initialize addr struct for typical HTTP connection
     server_addr.sin_family      = AF_INET;
@@ -65,6 +66,7 @@ int setup_connection(int port) {
 
     check_or_exit(bind(serverfd, (struct sockaddr *) &server_addr,
                 sizeof(server_addr)), "bind");
+    LOG("%s", "bind successful");
 
     // NOTE: This cannot fail as serverfd is a valid socket
     // and 5 is the maximum queue length
@@ -73,12 +75,13 @@ int setup_connection(int port) {
 
     clientfd = accept(serverfd, (struct sockaddr *) &client_addr, &client_len);
     check_or_exit(clientfd < 0, "accept");
+    LOG("accepted connection on clientfd = %d", clientfd);
 
     return clientfd;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != NUM_ARGS) {
+    if (argc != NUM_ARGS + 1) {
         usage(argv[0]);
     }
 
@@ -91,13 +94,17 @@ int main(int argc, char *argv[]) {
     int sock = setup_connection(atoi(argv[1]));
 
     // block until START_COLLECT
+    LOG("%s", "waiting for START_COLLECT...");
     check_for(START_COLLECT, sock, true);
+    LOG("%s", "received START_COLLECT");
 
     PulseHistory ph(argv[2], argv[3]);
 
     do {
+        LOG("%s", "collecting()");
         ph.collect();
     } while (check_for(STOP_COLLECT, sock));
+    LOG("%s", "received STOP_COLLECT");
 
     return 0;
 }

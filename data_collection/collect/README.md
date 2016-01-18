@@ -6,7 +6,8 @@ collection, and collects until a stop signal is received.
 
 ## Build
 
-Simply run `make`.
+With logging to stderr: `make`
+Without logging: `make no-debug`
 
 ## Usage
 
