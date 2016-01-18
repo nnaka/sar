@@ -1,11 +1,20 @@
+% The following is a MATLAB implementation of the standard gradient descent
+% minimization of the image entropy cost function.
+%
 % B is a 4D array of b_k values
 % L is the number of iterations
 function [ focusedImage, minEntropy ] = minEntropyFminunc( B, L )
-  % Guess zero initially
+  MAX_ITER = 100;
+  K = size(B, 4);
   l = 2;
   minIdx = 1;
   minEntropy = 100;
-  phi_offsets = zeros(100, size(B, 4));
+
+  % Holds array of potentially minimizing phase offsets - 100 is an arbitrary
+  % maximum number of iterations
+  %
+  % Guess zero initially
+  phi_offsets = zeros(MAX_ITER, K);
 
   % Step size parameter for gradient descent
   s = 10;
