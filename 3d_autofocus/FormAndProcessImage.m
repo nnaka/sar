@@ -48,38 +48,50 @@
 % y0=kron(ones(3,1),(-20:20:20)');
 % z0=[0;30;-30;30;0;-30;30;-30;0];
 
-x0 = 0;
-y0 = 0;
-z0 = 0;
+% x0 = 0;
+% y0 = 0;
+% z0 = 0;
 
 % x0 = linspace(-5,5,100)';
 % y0 = zeros(numel(x0),1);
 % z0 = y0;
 
-% x0 = [-10,0,10];
-% y0 = [-10,0,10];
-% z0 = [-10,0,10];
+x0 = [-10,0,10];
+y0 = [-10,0,10];
+z0 = [-10,0,10];
 
 %x0 = [-30,-30,-30,-30,-30,-20,-10,-10,-10,-10,-10,10,20,30,20,20,20,10,20,30];
 %y0 = [10,5,0,-5,-10,0,10,5,0,-5,-10,10,10,10,5,0,-5,-10,-10,-10];
 %z0 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]'
 
 % Other image parameters
-nX = 20;                       % # of points per row in synthetic aperture
-nY = 20;                       % # of rows in synthetic aperture
-addNoise = true;               % true will inject GPS noise into aperture
+nX = 30;                       % # of points per row in synthetic aperture
+nY = 30;                       % # of rows in synthetic aperture
+addNoise = false;               % true will inject GPS noise into aperture
 
 %% Generate SAR data with the given points 
-PulseData = FormPulses(x0, y0, z0, nX, nY, addNoise);
+% PulseData = FormPulses(x0, y0, z0, nX, nY, addNoise);
+
+% For testing purposes, we do not generate new data each run, and instead
+% load formatted data from a file.
 
 %% Format the raw radar data to mesh with 2014-2015 Senior Design code
-formedData = FormatPulseData(PulseData);
+% formedData = FormatPulseData(PulseData);
+
+% For testing purposes, we load imageSet strictly from a file so it is
+% consistent
+
 
 %% Process formed data to create an image
 imgSize = [10 10 10];        % voxels [ X Y Z ]
 sceneSize = [20 20 20];      % meters [ X Y Z ] 
 form_pulse_set = true;         % set to true if image is to be autofocused
-imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
+% imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
+
+% For testing purposes, we load imageSet strictly from a file so it is
+% consistent.
+
+load('imageSet30by30_9pts_no_noise')
 
 %% Perform minimum entropy Autofocus 
 

@@ -5,7 +5,8 @@ function [yOut] = FormPulses(x0, y0, z0, nX, nY, addNoise)
 % 
 % With given target locations and pulses in the aperture, this function
 % will generate artificial radar pulses of the given scene. Designed to
-% simulate the PulsOn p410 radar unit as accurately as possible. 
+% simulate the PulsOn p410 radar unit as accurately as possible. This
+% additionally saves the data to RawImageData.mat.
 %
 % Inputs:
 %   x0, y0, z0 - [ X Y Z ] coordinates of each radar target

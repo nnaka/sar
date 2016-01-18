@@ -1,0 +1,17 @@
+This file documents observations made when running some basic tests on
+1/15/2016, comparing our brute force solution to gradient descent.
+
+Running w/ a single point and 20 by 20 pulses:
+
+Brute force: 3.284563 (did not profile)
+Gradient descent: 3.863508 (did not profile)
+
+Running w/ 9 points and 20 by 20 pulses:
+
+Gradient descent: 3.619730, 20.512 s
+Brute force: 3.474709, 51.631 s
+
+Running w/ 9 points and 30 by 30 pulses:
+
+Gradient descent: 2.755788, 51.906 s
+Brute force: 2.428918, 237.111 s
