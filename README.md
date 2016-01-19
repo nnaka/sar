@@ -7,11 +7,6 @@ autofocus algorithms. Refer to each subdirectory's `README` for details.
 
 All programs used in real time to collect radar data.
 
-## `clock_sync`
-
-All programs used to synchronize the Hummingboard, Piksi GPS, and PulsON radar
-clocks.
-
 ## `2d_autofocus`
 
 Similar to `3d_autofocus` but for only a two dimensional aperture. This will
