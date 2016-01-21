@@ -109,9 +109,10 @@ end
 % Display the final image
 
 dB = 10;
-ViewCube(focusedImage, dB);
 fprintf('Min Entropy: %f\n', minEntropy);
+ViewCube(focusedImage, dB);
 
-save imageCube.mat focusedImage -v7.3
+
+% save imageCube.mat focusedImage -v7.3
 
 
