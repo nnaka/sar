@@ -23,6 +23,9 @@ void read_message(int fd, Message *msg) {
     LOG("read %s", c_str(*msg));
 }
 
+// TODO: (joshpfosi) I am not convinced that this properly exits if the other
+// end closes the TCP connection. To demonstrate it simply run `collect 5555 x
+// y` and `client localhost 5555`.
 void write_message(int fd, Message msg) {
     check_or_exit(write(fd, (char *)&msg, sizeof(msg)) < 0, "write");
     LOG("wrote %s", c_str(msg));
