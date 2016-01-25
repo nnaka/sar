@@ -53,6 +53,7 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   % `focusedImage` now contains the 1D representation of the entropy-minimized
   % B, constructed using phase offsets `phi_offets(minIdx)`. We must reshape it
   % back into a 3D array.
+  % TODO: (joshpfosi) Use `reshape` instead of ugly `for`s.
   out = zeros(X,Y,Z);
   for x = 1:X
       for y = 1:Y
@@ -101,19 +102,15 @@ end
 % above.
 function [ Z ] = image(phi_offsets, B)
   K = numel(phi_offsets);
-  arr = [];
+  N = length(B) / K;
   
   % Form 1D array of e^-j * phi_i which repeats every kth element to allow for
   % simple elementwise multiplication on B. See equation (2) in 'tech_report.pdf'.
-  % TODO: (joshpfosi) Could use parfor here.
-  % TODO: (joshpfosi) Should precompute `exp(-1j * phi_offsets)`
-  for k = 1:length(B)/K
-      arr = horzcat(arr, exp(-1j * phi_offsets));
-  end
+  arr = repmat(exp(-1j * phi_offsets), 1, N);
   
-  % NOTE: `reshape(B .* arr, K, [])` returns 1D array of K pulses where each
-  % element at index `k` corresponds to the 3D image as "seen" by the given
-  % pulse, `b_k`
+  % `reshape(B .* arr, K, [])` returns a matrix with `N` columns and `K` rows.
+  % Each column vector contains each of `K` contributions to the pixel `i`, so
+  % summing each column vector results in `Z`.
   Z = sum(reshape(B .* arr, K, []), 1);
 end
 
