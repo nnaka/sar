@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
 #include <time.h>
 
 #include "debug.h"
@@ -15,7 +16,6 @@ using namespace std;
 // errors.
 
 PulsOn::PulsOn(const string & radioAddr) :
-    userPrintInfo(true),
 	userBaseII(DEFAULT_BASEII),
     userScanStart(DEFAULT_SCAN_START),
     userScanStop(DEFAULT_SCAN_STOP),
@@ -80,7 +80,7 @@ PulsOn::PulsOn(const string & radioAddr) :
             "Time out waiting for set config confirm");
 
     // print out configuration
-    LOG("%s", "\nConfiguration:");
+    LOG("%s", "Configuration:");
     LOG("\tnodeId: %d", config.nodeId);
     LOG("\tscanStartPs: %d", config.scanStartPs);
     LOG("\tscanEndPs: %d", config.scanEndPs);
@@ -102,18 +102,19 @@ PulsOn::PulsOn(const string & radioAddr) :
             "Time out waiting for status info confirm");
 
     // print out status info
-    LOG("%s", "\nStatus Info:");
+    LOG("%s", "Status Info:");
     LOG("\tPackage version: %s", statusInfo.packageVersionStr);
     LOG("\tApp version: %d.%d build %d", statusInfo.appVersionMajor,
             statusInfo.appVersionMinor, statusInfo.appVersionBuild);
-    LOG("\tUWB Kernel version: %d.%d build %d", statusInfo.uwbKernelVersionMajor,
-            statusInfo.uwbKernelVersionMinor, statusInfo.uwbKernelVersionBuild);
+    LOG("\tUWB Kernel version: %d.%d build %d",
+            statusInfo.uwbKernelVersionMajor, statusInfo.uwbKernelVersionMinor,
+            statusInfo.uwbKernelVersionBuild);
     LOG("\tFirmware version: %x/%x/%x ver %X", statusInfo.firmwareMonth,
             statusInfo.firmwareDay, statusInfo.firmwareYear,
             statusInfo.firmwareVersion);
     LOG("\tSerial number: %08X", statusInfo.serialNum);
     LOG("\tBoard revision: %c", statusInfo.boardRev);
-    LOG("\tTemperature: %.2f degC\n", statusInfo.temperature/4.0);
+    LOG("\tTemperature: %.2f degC", statusInfo.temperature / 4.0);
 }
 
 PulsOn::~PulsOn() {
@@ -129,7 +130,7 @@ PulsOn::~PulsOn() {
 // Collects 1 radar pulse
 //
 // @raises CollectionError
-void PulsOn::collect() {
+string PulsOn::collect() {
     int timeoutMs = 200;
 
     // raw and filtered scans and detection lists are sent in this struct
@@ -143,58 +144,54 @@ void PulsOn::collect() {
             "Time out waiting for control confirm");
 
     while (mrmInfoGet(timeoutMs, &info) == 0) {
-        processInfo(&info, stdout, userPrintInfo);
+        return processInfo(&info);
     }
+
+    return "";
 }
 
-void PulsOn::processInfo(mrmInfo *info, FILE *fp, int printInfo) {
-	unsigned int i;
+string PulsOn::processInfo(mrmInfo *info) {
+    stringstream ss;
 
     switch (info->msg.scanInfo.msgType) {
         case MRM_DETECTION_LIST_INFO:
-            // print number of detections and index and magnitude of 1st detection
-			if (printInfo)
-                LOG("DETECTION_LIST_INFO: msgId %d, numDetections %d, 1st detection index: %d, 1st detection magnitude: %d",
-                        info->msg.detectionList.msgId,
-                        info->msg.detectionList.numDetections,
-                        info->msg.detectionList.detections[0].index,
-                        info->msg.detectionList.detections[0].magnitude);
+            // print number of detections and index
+            // and magnitude of 1st detection
+            LOG("DETECTION_LIST_INFO: msgId %d, numDetections %d, 1st detection"
+                    "index: %d, 1st detection magnitude: %d",
+                    info->msg.detectionList.msgId,
+                    info->msg.detectionList.numDetections,
+                    info->msg.detectionList.detections[0].index,
+                    info->msg.detectionList.detections[0].magnitude);
 
             break;
-
 		case MRM_FULL_SCAN_INFO:
-			if (printInfo)
-				LOG("FULL_SCAN_INFO: msgId %d, sourceId %d, timestamp %d, "
-						"scanStartPs %d, scanStopPs %d, "
-						"scanStepBins %d, scanFiltering %d, antennaId %d, "
-						"operationMode %d, numSamplesTotal %d, numMessagesTotal %d",
-						info->msg.scanInfo.msgId,
-						info->msg.scanInfo.sourceId,
-						info->msg.scanInfo.timestamp,
-						info->msg.scanInfo.scanStartPs,
-						info->msg.scanInfo.scanStopPs,
-						info->msg.scanInfo.scanStepBins,
-						info->msg.scanInfo.scanFiltering,
-						info->msg.scanInfo.antennaId,
-						info->msg.scanInfo.operationMode,
-						info->msg.scanInfo.numSamplesTotal,
-						info->msg.scanInfo.numMessagesTotal);
+            ss << "FULL_SCAN_INFO:"
+               << " msgId " << info->msg.scanInfo.msgId << ","
+               << " sourceId " << info->msg.scanInfo.sourceId << ","
+               << " timestamp " << info->msg.scanInfo.timestamp << ","
+               << " scanStartPs " << info->msg.scanInfo.scanStartPs << ","
+               << " scanStopPs " << info->msg.scanInfo.scanStopPs << ","
+               << " scanStepBins " << info->msg.scanInfo.scanStepBins << ","
+               << " scanFiltering " << info->msg.scanInfo.scanFiltering << ","
+               << " antennaId " << info->msg.scanInfo.antennaId << ","
+               << " operationMode " << info->msg.scanInfo.operationMode << ","
+               << " numSamplesTotal " << info->msg.scanInfo.numSamplesTotal << ","
+               << " numMessagesTotal " << info->msg.scanInfo.numMessagesTotal;
 
-            // TODO: Needs to store in data structure
-			// log scan message
-			if (fp) {
-				fprintf(fp, "%ld, MrmFullScanInfo, %d, %d, %d, %d, %d, %d, %d, %d, %u", (long)time(NULL), info->msg.scanInfo.msgId, info->msg.scanInfo.sourceId,
-					info->msg.scanInfo.timestamp, info->msg.scanInfo.scanStartPs, info->msg.scanInfo.scanStopPs, info->msg.scanInfo.scanStepBins, 
-						info->msg.scanInfo.scanFiltering, info->msg.scanInfo.antennaId, info->msg.scanInfo.numSamplesTotal);
-				
-				for (i = 0; i < info->msg.scanInfo.numSamplesTotal; i++)
-					fprintf(fp, ", %d", info->scan[i]);
-				fprintf(fp, "");
-			}
+            LOG("%s", ss.str().c_str());
+
+			for (mrm_uint32_t i = 0;
+                    i < info->msg.scanInfo.numSamplesTotal; ++i) {
+
+                ss << ", " << info->scan[i];
+            }
+
             free(info->scan);
             break;
-
         default:
             break;
     }
+
+    return ss.str();
 }

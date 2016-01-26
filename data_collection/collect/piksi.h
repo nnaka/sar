@@ -16,7 +16,7 @@ class Piksi {
         Piksi(const std::string &);
         ~Piksi();
 
-        void collect();
+        std::string collect();
     private:
         friend void sbp_pos_llh_callback(u16 sender_id, u8 len, u8 msg[], void *context);
         friend void sbp_baseline_ned_callback(u16 sender_id, u8 len, u8 msg[], void *context);

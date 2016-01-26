@@ -12,20 +12,18 @@ class PulsOn {
     public:
         PulsOn(const std::string &);
         ~PulsOn();
-        void collect();
+
+        std::string collect();
     private:
-        void processInfo(mrmInfo *info, FILE *fp, int printInfo);
-        void mrmSampleExit(void);
+        std::string processInfo(mrmInfo *info);
 
         const int DEFAULT_BASEII        = 12,
                   DEFAULT_SCAN_START    = 10000,
                   DEFAULT_SCAN_STOP     = 39297,
-                  DEFAULT_SCAN_COUNT    = 5,
+                  DEFAULT_SCAN_COUNT    = 1,
                   DEFAULT_SCAN_INTERVAL = 125000,
                   DEFAULT_TX_GAIN       = 63;
         
-        bool userPrintInfo;
-
         mrmConfiguration config;
 
 	    int userBaseII,

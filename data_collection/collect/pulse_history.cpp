@@ -1,4 +1,5 @@
 #include "pulse_history.h"
+#include <iostream>
 
 using namespace std;
 
@@ -10,9 +11,9 @@ PulseHistory::PulseHistory(const string &gps_port, const string &radar_port) :
 //
 // @raises CollectionError
 void PulseHistory::collect() {
-    gps.collect();
+    cout << gps.collect();
 
     for (int i = 0; i < pulsesPerLoc; ++i) {
-        radar.collect();
+        cout << radar.collect();
     }
 }

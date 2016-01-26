@@ -83,6 +83,7 @@ u32 piksi_port_read(u8 *buff, u32 n, void *context) {
 Piksi::Piksi(const string & usb_port) : NUM_CALLBACKS(5), callbacks_rcvd(0)  {
     const char *serial_port_name = usb_port.c_str();
 
+    LOG("Constructing Piksi, listening on %s", serial_port_name);
     // open port
     check_or_exit(sp_get_port_by_name(serial_port_name, &piksi_port) != SP_OK,
             "Cannot find provided serial port");
@@ -119,6 +120,8 @@ Piksi::Piksi(const string & usb_port) : NUM_CALLBACKS(5), callbacks_rcvd(0)  {
             this, &vel_ned_node);
     sbp_register_callback(&s, SBP_MSG_DOPS, &sbp_dops_callback,
             this, &dops_node);
+
+    LOG("%s", "Finished constructing Piksi");
 }
 
 Piksi::~Piksi() {
@@ -127,16 +130,20 @@ Piksi::~Piksi() {
 }
 
 // Collects 1 radar pulse
-void Piksi::collect() {
+string Piksi::collect() {
     char rj[30];
     char str[1000];
     int str_i;
 
-    sbp_process(&s, &piksi_port_read);
+    s8 ret = 0;
 
-    if (callbacks_rcvd != NUM_CALLBACKS - 1) {
-        return;
-    }
+    do {
+        LOG("Insufficient (%d) callbacks received, expected %d",
+                callbacks_rcvd, NUM_CALLBACKS);
+        ret = sbp_process(&s, &piksi_port_read);
+    } while (ret >= 0 && callbacks_rcvd < NUM_CALLBACKS);
+
+    check_or_exit(ret < 0, "sbp_process error");
 
     callbacks_rcvd = 0;
 
@@ -144,14 +151,11 @@ void Piksi::collect() {
     str_i = 0;
     memset(str, 0, sizeof(str));
 
-    str_i += sprintf(str + str_i, "\n\n\n\n");
-
     /* Print GPS time. */
     str_i += sprintf(str + str_i, "GPS Time:\n");
     str_i += sprintf(str + str_i, "\tWeek\t\t: %6d\n", (int)gps_time.wn);
     sprintf(rj, "%6.10f", ((float)gps_time.tow + ((float)gps_time.ns/1e6))/1e3);
     str_i += sprintf(str + str_i, "\tSeconds\t: %9s\n", rj);
-    str_i += sprintf(str + str_i, "\n");
 
     /* Print absolute position. */
     str_i += sprintf(str + str_i, "Absolute Position:\n");
@@ -162,21 +166,18 @@ void Piksi::collect() {
     sprintf(rj, "%4.10lf", pos_llh.height);
     str_i += sprintf(str + str_i, "\tHeight\t: %17s\n", rj);
     str_i += sprintf(str + str_i, "\tSatellites\t:     %02d\n", pos_llh.n_sats);
-    str_i += sprintf(str + str_i, "\n");
 
     /* Print NED (North/East/Down) baseline (position vector from base to rover). */
     str_i += sprintf(str + str_i, "Baseline (mm):\n");
     str_i += sprintf(str + str_i, "\tNorth\t\t: %6d\n", (int)baseline_ned.n);
     str_i += sprintf(str + str_i, "\tEast\t\t: %6d\n", (int)baseline_ned.e);
     str_i += sprintf(str + str_i, "\tDown\t\t: %6d\n", (int)baseline_ned.d);
-    str_i += sprintf(str + str_i, "\n");
 
     /* Print NED velocity. */
     str_i += sprintf(str + str_i, "Velocity (mm/s):\n");
     str_i += sprintf(str + str_i, "\tNorth\t\t: %6d\n", (int)vel_ned.n);
     str_i += sprintf(str + str_i, "\tEast\t\t: %6d\n", (int)vel_ned.e);
     str_i += sprintf(str + str_i, "\tDown\t\t: %6d\n", (int)vel_ned.d);
-    str_i += sprintf(str + str_i, "\n");
 
     /* Print Dilution of Precision metrics. */
     str_i += sprintf(str + str_i, "Dilution of Precision:\n");
@@ -190,9 +191,8 @@ void Piksi::collect() {
     str_i += sprintf(str + str_i, "\tTDOP\t\t: %7s\n", rj);
     sprintf(rj, "%4.2f", ((float)dops.vdop/100));
     str_i += sprintf(str + str_i, "\tVDOP\t\t: %7s\n", rj);
-    str_i += sprintf(str + str_i, "\n");
 
-    printf("\033[H");
-    printf("\033[2J");
-    printf("%s", str);
+    LOG("%s", str);
+
+    return string(str);
 }

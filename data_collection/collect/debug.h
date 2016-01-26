@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#ifdef DEBUG
+#if DEBUG
 #define LOG(fmt, ...) \
     ((void)fprintf(stderr, "%s:%d:%s(): " fmt"...\n", __FILE__, \
             __LINE__, __func__, __VA_ARGS__));
