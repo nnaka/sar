@@ -58,7 +58,7 @@ typedef enum {mrmIfIp, mrmIfSerial, mrmIfUsb} mrmIfType;
 //  Returns ERR on failure.
 //
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-int mrmIfInit(mrmIfType ifType, char *destAddr);
+int mrmIfInit(mrmIfType ifType, const char *destAddr);
 
 
 //

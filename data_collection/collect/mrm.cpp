@@ -459,7 +459,7 @@ int mrmInfoGet(int timeoutMs, mrmInfo *info)
                 {
                     if (info->scan)
                         free(info->scan);
-                    info->scan = malloc(info->msg.scanInfo.numSamplesTotal * sizeof(mrm_int32_t));
+                    info->scan = (mrm_int32_t *)malloc(info->msg.scanInfo.numSamplesTotal * sizeof(mrm_int32_t));
                     if (info->scan == NULL)
                     {
                         printf("Out of memory!\n");

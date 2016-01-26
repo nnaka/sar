@@ -87,7 +87,7 @@ static unsigned short crc16(void *buf, int len);
 // mrmIfInit - perform initialization
 //_____________________________________________________________________________
 
-int mrmIfInit(mrmIfType ifType, char *destAddr)
+int mrmIfInit(mrmIfType ifType, const char *destAddr)
 {
     unsigned radioIpAddr;
 
@@ -503,7 +503,7 @@ static int mrmIfSendPacketSerial(void *pkt, unsigned size)
     unsigned short val;
 
     // send sync bytes
-    i = serWrite("\xa5\xa5", 2);
+    i = serWrite((void *)"\xa5\xa5", 2);
     if (i < 0)
         return ERR;
 
