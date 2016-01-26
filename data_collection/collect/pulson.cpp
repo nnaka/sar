@@ -5,10 +5,16 @@
 #include <string.h>
 #include <time.h>
 
+#include "debug.h"
+
 using namespace std;
 
+// NOTE: Most memory leaks marked below result from not calling
+// `mrmSampleExit()` So `mrmIfClose()` is never called, and so the socket is
+// forcibly released by the OS which can cause 'bind: Socket already in use'
+// errors.
+
 PulsOn::PulsOn(const string & radioAddr) :
-    connected(false),
     userPrintInfo(true),
 	userBaseII(DEFAULT_BASEII),
     userScanStart(DEFAULT_SCAN_START),
@@ -17,145 +23,128 @@ PulsOn::PulsOn(const string & radioAddr) :
     userScanInterval(DEFAULT_SCAN_INTERVAL),
     userTxGain(DEFAULT_TX_GAIN)
 {
-    int i, mode;
+    int mode;
 
     // config and status strucs
     mrmMsg_GetStatusInfoConfirm statusInfo;
 
 	// announce to the world
-	printf("MRM Sample App\n\n");
+	LOG("%s", "MRM Sample App");
 
     // Now print out what we are doing
-    printf("Radio address: %s (USB)\n", radioAddr.c_str());
-    printf("Receiving scans directly from radio (no scan server).\n");
+    LOG("Radio address: %s (USB)", radioAddr.c_str());
+    LOG("%s", "Receiving scans directly from radio (no scan server)");
 
     // initialize the interface to the RCM
-    if (mrmIfInit(mrmIfUsb, radioAddr.c_str()) != OK) {
-        printf("Initialization failed.\n");
-        exit(0);
-    }
+    check_or_exit(mrmIfInit(mrmIfUsb, radioAddr.c_str()) != OK,
+            "Initialization failed");
 
+    // TODO: (joshpfosi) Memory leak (see top of file)
     // make sure radio is in active mode
-    if (mrmSleepModeGet(&mode) != OK) {
-        printf("Time out waiting for sleep mode.\n");
-        mrmSampleExit();
-    }
+    check_or_exit(mrmSleepModeGet(&mode) != OK,
+            "Time out waiting for sleep mode");
 
 	// print sleep mode
-    printf("Radio sleep mode is %d.\n", mode);
+    LOG("Radio sleep mode is %d", mode);
     if (mode != MRM_SLEEP_MODE_ACTIVE) {
-        printf("Changing sleep mode to Active.\n");
+        LOG("%s", "Changing sleep mode to Active");
         mrmSleepModeSet(MRM_SLEEP_MODE_ACTIVE);
     }
 
+    // TODO: (joshpfosi) Memory leak (see top of file)
     // make sure radio is in MRM mode
-    if (mrmOpmodeGet(&mode) != OK) {
-        printf("Time out waiting for mode of operation.\n");
-        mrmSampleExit();
-    }
+    check_or_exit(mrmOpmodeGet(&mode) != OK,
+            "Time out waiting for mode of operation");
 
 	// print radio opmode
-    printf("Radio mode of operation is %d.\n", mode);
+    LOG("Radio mode of operation is %d", mode);
     if (mode != MRM_OPMODE_MRM) {
-        printf("Changing radio mode to MRM.\n");
+        LOG("%s", "Changing radio mode to MRM");
         mrmOpmodeSet(MRM_OPMODE_MRM);
     }
 
+    // TODO: (joshpfosi) Memory leak (see top of file)
     // retrieve config from MRM
-    if (mrmConfigGet(&config) != 0) {
-        printf("Time out waiting for config confirm.\n");
-        mrmSampleExit();
-    }
+    check_or_exit(mrmConfigGet(&config) != 0,
+            "Time out waiting for config confirm");
 
 	// modify config with user inputs
 	config.baseIntegrationIndex = userBaseII;
-	config.scanStartPs = userScanStart;
-	config.scanEndPs = userScanStop;
-	config.txGain = userTxGain;
+	config.scanStartPs          = userScanStart;
+	config.scanEndPs            = userScanStop;
+	config.txGain               = userTxGain;
 
+    // TODO: (joshpfosi) Memory leak (see top of file)
 	// write updated config to radio
-	if (mrmConfigSet(&config) != 0) {
-		printf("Time out waiting for set config confirm.\n");
-		mrmSampleExit();
-	}
+	check_or_exit(mrmConfigSet(&config) != 0,
+            "Time out waiting for set config confirm");
 
     // print out configuration
-    printf("\nConfiguration:\n");
-    printf("\tnodeId: %d\n", config.nodeId);
-    printf("\tscanStartPs: %d\n", config.scanStartPs);
-    printf("\tscanEndPs: %d\n", config.scanEndPs);
-    printf("\tscanResolutionBins: %d\n", config.scanResolutionBins);
-    printf("\tbaseIntegrationIndex: %d\n", config.baseIntegrationIndex);
+    LOG("%s", "\nConfiguration:");
+    LOG("\tnodeId: %d", config.nodeId);
+    LOG("\tscanStartPs: %d", config.scanStartPs);
+    LOG("\tscanEndPs: %d", config.scanEndPs);
+    LOG("\tscanResolutionBins: %d", config.scanResolutionBins);
+    LOG("\tbaseIntegrationIndex: %d", config.baseIntegrationIndex);
 
-    for (i = 0 ; i < 4; i++) {
-        printf("\tsegment %d segmentNumSamples: %d\n", i, config.segmentNumSamples[i]);
-        printf("\tsegment %d segmentIntMult: %d\n", i, config.segmentIntMult[i]);
+    for (int i = 0 ; i < 4; i++) {
+        LOG("\tsegment %d segmentNumSamples: %d", i, config.segmentNumSamples[i]);
+        LOG("\tsegment %d segmentIntMult: %d", i, config.segmentIntMult[i]);
     }
 
-    printf("\tantennaMode: %d\n", config.antennaMode);
-    printf("\ttxGain: %d\n", config.txGain);
-    printf("\tcodeChannel: %d\n", config.codeChannel);
+    LOG("\tantennaMode: %d", config.antennaMode);
+    LOG("\ttxGain: %d", config.txGain);
+    LOG("\tcodeChannel: %d", config.codeChannel);
 
+    // TODO: (joshpfosi) Memory leak (see top of file)
     // retrieve status info from MRM
-    if (mrmStatusInfoGet(&statusInfo) != 0) {
-        printf("Time out waiting for status info confirm.\n");
-        mrmSampleExit();
-    }
+    check_or_exit(mrmStatusInfoGet(&statusInfo) != 0,
+            "Time out waiting for status info confirm");
 
     // print out status info
-    printf("\nStatus Info:\n");
-    printf("\tPackage version: %s\n", statusInfo.packageVersionStr);
-    printf("\tApp version: %d.%d build %d\n", statusInfo.appVersionMajor,
+    LOG("%s", "\nStatus Info:");
+    LOG("\tPackage version: %s", statusInfo.packageVersionStr);
+    LOG("\tApp version: %d.%d build %d", statusInfo.appVersionMajor,
             statusInfo.appVersionMinor, statusInfo.appVersionBuild);
-    printf("\tUWB Kernel version: %d.%d build %d\n", statusInfo.uwbKernelVersionMajor,
+    LOG("\tUWB Kernel version: %d.%d build %d", statusInfo.uwbKernelVersionMajor,
             statusInfo.uwbKernelVersionMinor, statusInfo.uwbKernelVersionBuild);
-    printf("\tFirmware version: %x/%x/%x ver %X\n", statusInfo.firmwareMonth,
+    LOG("\tFirmware version: %x/%x/%x ver %X", statusInfo.firmwareMonth,
             statusInfo.firmwareDay, statusInfo.firmwareYear,
             statusInfo.firmwareVersion);
-    printf("\tSerial number: %08X\n", statusInfo.serialNum);
-    printf("\tBoard revision: %c\n", statusInfo.boardRev);
-    printf("\tTemperature: %.2f degC\n\n", statusInfo.temperature/4.0);
+    LOG("\tSerial number: %08X", statusInfo.serialNum);
+    LOG("\tBoard revision: %c", statusInfo.boardRev);
+    LOG("\tTemperature: %.2f degC\n", statusInfo.temperature/4.0);
 }
 
 PulsOn::~PulsOn() {
+    // NOTE: We do not raise exceptions in the destructor.
     // stop radio
     if (mrmControl(0, 0) != 0) {
-        printf("Time out waiting for control confirm.\n");
-        mrmSampleExit();
+        LOG("%s", "Time out waiting for control confirm");
     }
 
-    // perform cleanup
-	printf("\n\nAll Done!\n");
-    mrmSampleExit();
+    mrmIfClose();
 }
 
-// Collects 1 GPS pulse
+// Collects 1 radar pulse
 //
 // @raises CollectionError
 void PulsOn::collect() {
+    int timeoutMs = 200;
+
     // raw and filtered scans and detection lists are sent in this struct
     mrmInfo info;
 
-    printf("\nScanning with scan count of %d and interval of %d (microseconds)\n", userScanCount, userScanInterval);
-    int timeoutMs = 200;
+    LOG("\nScanning with scan count of %d and interval of %d (microseconds)",
+            userScanCount, userScanInterval);
 
-    if (mrmControl(userScanCount, userScanInterval) != 0) {
-        printf("Time out waiting for control confirm.\n");
-        mrmSampleExit();
-    }
+    // TODO: (joshpfosi) Memory leak (see top of file)
+    check_or_exit(mrmControl(userScanCount, userScanInterval) != 0,
+            "Time out waiting for control confirm");
 
     while (mrmInfoGet(timeoutMs, &info) == 0) {
         processInfo(&info, stdout, userPrintInfo);
     }
-}
-
-void PulsOn::mrmSampleExit(void) {
-    if (connected) {
-        mrmDisconnect();
-    }
-
-    mrmIfClose();
-    exit(EXIT_FAILURE);
 }
 
 void PulsOn::processInfo(mrmInfo *info, FILE *fp, int printInfo) {
@@ -165,7 +154,7 @@ void PulsOn::processInfo(mrmInfo *info, FILE *fp, int printInfo) {
         case MRM_DETECTION_LIST_INFO:
             // print number of detections and index and magnitude of 1st detection
 			if (printInfo)
-                printf("DETECTION_LIST_INFO: msgId %d, numDetections %d, 1st detection index: %d, 1st detection magnitude: %d\n",
+                LOG("DETECTION_LIST_INFO: msgId %d, numDetections %d, 1st detection index: %d, 1st detection magnitude: %d",
                         info->msg.detectionList.msgId,
                         info->msg.detectionList.numDetections,
                         info->msg.detectionList.detections[0].index,
@@ -175,10 +164,10 @@ void PulsOn::processInfo(mrmInfo *info, FILE *fp, int printInfo) {
 
 		case MRM_FULL_SCAN_INFO:
 			if (printInfo)
-				printf("FULL_SCAN_INFO: msgId %d, sourceId %d, timestamp %d, "
+				LOG("FULL_SCAN_INFO: msgId %d, sourceId %d, timestamp %d, "
 						"scanStartPs %d, scanStopPs %d, "
 						"scanStepBins %d, scanFiltering %d, antennaId %d, "
-						"operationMode %d, numSamplesTotal %d, numMessagesTotal %d\n",
+						"operationMode %d, numSamplesTotal %d, numMessagesTotal %d",
 						info->msg.scanInfo.msgId,
 						info->msg.scanInfo.sourceId,
 						info->msg.scanInfo.timestamp,
@@ -191,6 +180,7 @@ void PulsOn::processInfo(mrmInfo *info, FILE *fp, int printInfo) {
 						info->msg.scanInfo.numSamplesTotal,
 						info->msg.scanInfo.numMessagesTotal);
 
+            // TODO: Needs to store in data structure
 			// log scan message
 			if (fp) {
 				fprintf(fp, "%ld, MrmFullScanInfo, %d, %d, %d, %d, %d, %d, %d, %d, %u", (long)time(NULL), info->msg.scanInfo.msgId, info->msg.scanInfo.sourceId,
@@ -199,7 +189,7 @@ void PulsOn::processInfo(mrmInfo *info, FILE *fp, int printInfo) {
 				
 				for (i = 0; i < info->msg.scanInfo.numSamplesTotal; i++)
 					fprintf(fp, ", %d", info->scan[i]);
-				fprintf(fp, "\n");
+				fprintf(fp, "");
 			}
             free(info->scan);
             break;

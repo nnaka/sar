@@ -24,7 +24,7 @@ class PulsOn {
                   DEFAULT_SCAN_INTERVAL = 125000,
                   DEFAULT_TX_GAIN       = 63;
         
-        bool connected, userPrintInfo;
+        bool userPrintInfo;
 
         mrmConfiguration config;
 
