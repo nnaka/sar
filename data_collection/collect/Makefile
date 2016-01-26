@@ -13,4 +13,4 @@ collect:
 	clang++ -DDEBUG=1 -std=c++11 -Wall -Wextra -pedantic collect.cpp pulse_history.cpp piksi.cpp pulson.cpp common.cpp -lsbp -lserialport -o collect
 
 clean:
-	rm -f collect
+	rm -f collect client
