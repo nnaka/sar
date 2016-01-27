@@ -16,7 +16,7 @@ class PulseHistory {
     private:
         Piksi gps;
         PulsOn radar;
-        std::vector<std::string> pulse_history;
+        std::vector<std::string> pulseHistory;
 
         const int pulsesPerLoc;
 };
