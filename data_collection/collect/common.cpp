@@ -49,7 +49,7 @@ bool check_for(int fd, Message msg) {
 
     // TODO: (joshpfosi) `select` may be too slow for our application
     // TODO: (joshpfosi) We should check `select`s return value
-    select(fd + 1, &select_set, NULL, NULL, &tv);
+    select(fd + 1, &select_set, nullptr, nullptr, &tv);
 
     if (FD_ISSET(fd, &select_set)) {
         read_message(fd, &read_msg);

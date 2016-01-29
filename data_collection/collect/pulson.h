@@ -10,7 +10,7 @@
 #include "mrm.h"
 
 struct pulsonInfo : public mrmInfo {
-    pulsonInfo()  { scan = NULL; }
+    pulsonInfo()  { scan = nullptr; }
     ~pulsonInfo() { if (scan) { free(scan); } }
 };
 

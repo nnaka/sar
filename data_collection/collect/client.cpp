@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
     server_addr.sin_addr.s_addr = inet_addr(argv[1]);
 #else
     struct hostent *he = gethostbyname(argv[1]);
-    if (he == NULL) { herror("gethostbyname"); return 1; }
+    if (he == nullptr) { herror("gethostbyname"); return 1; }
 
     struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
     server_addr.sin_addr = *addr_list[0];

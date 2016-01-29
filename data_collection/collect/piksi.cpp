@@ -20,7 +20,7 @@ void sbp_pos_llh_callback(u16 sender_id, u8 len,
         u8 msg[], void *context) {
     (void)sender_id, (void)len;
 
-    assert(context != NULL);
+    assert(context != nullptr);
 
     Piksi *p = (Piksi *)context;
 
@@ -32,7 +32,7 @@ void sbp_gps_time_callback(u16 sender_id, u8 len,
         u8 msg[], void *context) {
     (void)sender_id, (void)len;
 
-    assert(context != NULL);
+    assert(context != nullptr);
 
     Piksi *p = (Piksi *)context;
 
