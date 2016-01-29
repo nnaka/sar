@@ -88,11 +88,7 @@ Piksi::~Piksi() {
 }
 
 // Collects 1 radar pulse
-string Piksi::collect() {
-    char rj[30];
-    char str[1000];
-    int str_i;
-
+void Piksi::collect(msg_pos_llh_t &pos, msg_gps_time_t &gps) {
     s8 ret = 0;
 
     do {
@@ -105,27 +101,6 @@ string Piksi::collect() {
 
     callbacks_rcvd = 0;
 
-    /* Print data from messages received from Piksi. */
-    str_i = 0;
-    memset(str, 0, sizeof(str));
-
-    /* Print GPS time. */
-    str_i += sprintf(str + str_i, "GPS Time:\n");
-    str_i += sprintf(str + str_i, "\tWeek\t\t: %6d\n", (int)gps_time.wn);
-    sprintf(rj, "%6.10f", ((float)gps_time.tow + ((float)gps_time.ns/1e6))/1e3);
-    str_i += sprintf(str + str_i, "\tSeconds\t: %9s\n", rj);
-
-    /* Print absolute position. */
-    str_i += sprintf(str + str_i, "Absolute Position:\n");
-    sprintf(rj, "%4.10lf", pos_llh.lat);
-    str_i += sprintf(str + str_i, "\tLatitude\t: %17s\n", rj);
-    sprintf(rj, "%4.10lf", pos_llh.lon);
-    str_i += sprintf(str + str_i, "\tLongitude\t: %17s\n", rj);
-    sprintf(rj, "%4.10lf", pos_llh.height);
-    str_i += sprintf(str + str_i, "\tHeight\t: %17s\n", rj);
-    str_i += sprintf(str + str_i, "\tSatellites\t:     %02d\n", pos_llh.n_sats);
-
-    LOG("%s", str);
-
-    return string(str);
+    pos = pos_llh;
+    gps = gps_time;
 }

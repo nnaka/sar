@@ -19,7 +19,7 @@ class PulsOn {
         PulsOn(const std::string &);
         ~PulsOn();
 
-        void collect(pulsonInfo &info);
+        void collect(pulsonInfo &);
     private:
         const int DEFAULT_BASEII        = 12,
                   DEFAULT_SCAN_START    = 10000,
