@@ -28,42 +28,6 @@ void sbp_pos_llh_callback(u16 sender_id, u8 len,
     p->pos_llh = *(msg_pos_llh_t *)msg;
 }
 
-void sbp_baseline_ned_callback(u16 sender_id, u8 len,
-        u8 msg[], void *context) {
-    (void)sender_id, (void)len;
-
-    assert(context != NULL);
-
-    Piksi *p = (Piksi *)context;
-
-    p->callbacks_rcvd++;
-    p->baseline_ned = *(msg_baseline_ned_t *)msg;
-}
-
-void sbp_vel_ned_callback(u16 sender_id, u8 len,
-        u8 msg[], void *context) {
-    (void)sender_id, (void)len;
-
-    assert(context != NULL);
-
-    Piksi *p = (Piksi *)context;
-
-    p->callbacks_rcvd++;
-    p->vel_ned = *(msg_vel_ned_t *)msg;
-}
-
-void sbp_dops_callback(u16 sender_id, u8 len,
-        u8 msg[], void *context) {
-    (void)sender_id, (void)len;
-
-    assert(context != NULL);
-
-    Piksi *p = (Piksi *)context;
-
-    p->callbacks_rcvd++;
-    p->dops = *(msg_dops_t *)msg;
-}
-
 void sbp_gps_time_callback(u16 sender_id, u8 len,
         u8 msg[], void *context) {
     (void)sender_id, (void)len;
@@ -80,7 +44,7 @@ u32 piksi_port_read(u8 *buff, u32 n, void *context) {
     return sp_blocking_read(((Piksi *)context)->piksi_port, buff, n, 0);
 }
 
-Piksi::Piksi(const string & usb_port) : NUM_CALLBACKS(5), callbacks_rcvd(0)  {
+Piksi::Piksi(const string & usb_port) : callbacks_rcvd(0)  {
     const char *serial_port_name = usb_port.c_str();
 
     LOG("Constructing Piksi, listening on %s", serial_port_name);
@@ -114,12 +78,6 @@ Piksi::Piksi(const string & usb_port) : NUM_CALLBACKS(5), callbacks_rcvd(0)  {
             this, &gps_time_node);
     sbp_register_callback(&s, SBP_MSG_POS_LLH, &sbp_pos_llh_callback,
             this, &pos_llh_node);
-    sbp_register_callback(&s, SBP_MSG_BASELINE_NED, &sbp_baseline_ned_callback,
-            this, &baseline_ned_node);
-    sbp_register_callback(&s, SBP_MSG_VEL_NED, &sbp_vel_ned_callback,
-            this, &vel_ned_node);
-    sbp_register_callback(&s, SBP_MSG_DOPS, &sbp_dops_callback,
-            this, &dops_node);
 
     LOG("%s", "Finished constructing Piksi");
 }
@@ -166,31 +124,6 @@ string Piksi::collect() {
     sprintf(rj, "%4.10lf", pos_llh.height);
     str_i += sprintf(str + str_i, "\tHeight\t: %17s\n", rj);
     str_i += sprintf(str + str_i, "\tSatellites\t:     %02d\n", pos_llh.n_sats);
-
-    /* Print NED (North/East/Down) baseline (position vector from base to rover). */
-    str_i += sprintf(str + str_i, "Baseline (mm):\n");
-    str_i += sprintf(str + str_i, "\tNorth\t\t: %6d\n", (int)baseline_ned.n);
-    str_i += sprintf(str + str_i, "\tEast\t\t: %6d\n", (int)baseline_ned.e);
-    str_i += sprintf(str + str_i, "\tDown\t\t: %6d\n", (int)baseline_ned.d);
-
-    /* Print NED velocity. */
-    str_i += sprintf(str + str_i, "Velocity (mm/s):\n");
-    str_i += sprintf(str + str_i, "\tNorth\t\t: %6d\n", (int)vel_ned.n);
-    str_i += sprintf(str + str_i, "\tEast\t\t: %6d\n", (int)vel_ned.e);
-    str_i += sprintf(str + str_i, "\tDown\t\t: %6d\n", (int)vel_ned.d);
-
-    /* Print Dilution of Precision metrics. */
-    str_i += sprintf(str + str_i, "Dilution of Precision:\n");
-    sprintf(rj, "%4.2f", ((float)dops.gdop/100));
-    str_i += sprintf(str + str_i, "\tGDOP\t\t: %7s\n", rj);
-    sprintf(rj, "%4.2f", ((float)dops.hdop/100));
-    str_i += sprintf(str + str_i, "\tHDOP\t\t: %7s\n", rj);
-    sprintf(rj, "%4.2f", ((float)dops.pdop/100));
-    str_i += sprintf(str + str_i, "\tPDOP\t\t: %7s\n", rj);
-    sprintf(rj, "%4.2f", ((float)dops.tdop/100));
-    str_i += sprintf(str + str_i, "\tTDOP\t\t: %7s\n", rj);
-    sprintf(rj, "%4.2f", ((float)dops.vdop/100));
-    str_i += sprintf(str + str_i, "\tVDOP\t\t: %7s\n", rj);
 
     LOG("%s", str);
 
