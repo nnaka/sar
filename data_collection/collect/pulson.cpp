@@ -127,14 +127,11 @@ PulsOn::~PulsOn() {
     mrmIfClose();
 }
 
-// Collects 1 radar pulse
+// Collects 1 radar pulse and populates `info`
 //
 // @raises CollectionError
-string PulsOn::collect() {
+void PulsOn::collect(pulsonInfo &info) {
     int timeoutMs = 200;
-
-    // raw and filtered scans and detection lists are sent in this struct
-    mrmInfo info;
 
     LOG("\nScanning with scan count of %d and interval of %d (microseconds)",
             userScanCount, userScanInterval);
@@ -143,55 +140,5 @@ string PulsOn::collect() {
     check_or_exit(mrmControl(userScanCount, userScanInterval) != 0,
             "Time out waiting for control confirm");
 
-    while (mrmInfoGet(timeoutMs, &info) == 0) {
-        return processInfo(&info);
-    }
-
-    return "";
-}
-
-string PulsOn::processInfo(mrmInfo *info) {
-    stringstream ss;
-
-    switch (info->msg.scanInfo.msgType) {
-        case MRM_DETECTION_LIST_INFO:
-            // print number of detections and index
-            // and magnitude of 1st detection
-            LOG("DETECTION_LIST_INFO: msgId %d, numDetections %d, 1st detection"
-                    "index: %d, 1st detection magnitude: %d",
-                    info->msg.detectionList.msgId,
-                    info->msg.detectionList.numDetections,
-                    info->msg.detectionList.detections[0].index,
-                    info->msg.detectionList.detections[0].magnitude);
-
-            break;
-		case MRM_FULL_SCAN_INFO:
-            ss << "FULL_SCAN_INFO:"
-               << " msgId " << info->msg.scanInfo.msgId << ","
-               << " sourceId " << info->msg.scanInfo.sourceId << ","
-               << " timestamp " << info->msg.scanInfo.timestamp << ","
-               << " scanStartPs " << info->msg.scanInfo.scanStartPs << ","
-               << " scanStopPs " << info->msg.scanInfo.scanStopPs << ","
-               << " scanStepBins " << info->msg.scanInfo.scanStepBins << ","
-               << " scanFiltering " << info->msg.scanInfo.scanFiltering << ","
-               << " antennaId " << info->msg.scanInfo.antennaId << ","
-               << " operationMode " << info->msg.scanInfo.operationMode << ","
-               << " numSamplesTotal " << info->msg.scanInfo.numSamplesTotal << ","
-               << " numMessagesTotal " << info->msg.scanInfo.numMessagesTotal;
-
-            LOG("%s", ss.str().c_str());
-
-			for (mrm_uint32_t i = 0;
-                    i < info->msg.scanInfo.numSamplesTotal; ++i) {
-
-                ss << ", " << info->scan[i];
-            }
-
-            free(info->scan);
-            break;
-        default:
-            break;
-    }
-
-    return ss.str();
+    check_or_exit(mrmInfoGet(timeoutMs, &info) != 0, "mrmInfoGet ERR");
 }

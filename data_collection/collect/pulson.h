@@ -3,20 +3,24 @@
 // pulson.h
 // PulsOn collects data from a GPS over USB
 
+#include <stdlib.h>
 #include <string>
 
 #include "mrmIf.h"
 #include "mrm.h"
+
+struct pulsonInfo : public mrmInfo {
+    pulsonInfo()  { scan = NULL; }
+    ~pulsonInfo() { if (scan) { free(scan); } }
+};
 
 class PulsOn {
     public:
         PulsOn(const std::string &);
         ~PulsOn();
 
-        std::string collect();
+        void collect(pulsonInfo &info);
     private:
-        std::string processInfo(mrmInfo *info);
-
         const int DEFAULT_BASEII        = 12,
                   DEFAULT_SCAN_START    = 10000,
                   DEFAULT_SCAN_STOP     = 39297,

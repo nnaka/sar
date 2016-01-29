@@ -11,9 +11,10 @@ PulseHistory::PulseHistory(const string &gpsPort, const string &radarPort) :
 //
 // @raises CollectionError
 void PulseHistory::collect() {
+    pulsonInfo info;
     cout << gps.collect();
 
     for (int i = 0; i < pulsesPerLoc; ++i) {
-        cout << radar.collect();
+        radar.collect(info);
     }
 }
