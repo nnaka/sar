@@ -15,17 +15,19 @@
 
 using namespace std;
 
-void z_vec(const vector<dcomp> phi_offsets, const
-        double *Br, const double *Bi, vector<dcomp> &Z, size_t K, size_t
-        B_len)
+// Returns the entropy of the complex image `Z`
+double H(const vector<dcomp> &phi_offsets, const double *Br, const double *Bi,
+        size_t K, size_t B_len)
 {
     size_t N = B_len / K;
+    double Ez = 0, entropy = 0;
 
     mxAssert(B_len % K == 0, "length(B) should always be a multiple of K");
-    mxAssert(Z.size() == N, "Z must be big enough to fit N values");
+
+    vector<dcomp> Z_mag(N);
 
     // ------------------------------------------------------------------------
-    // Form Z
+    // Form Z_mag
     // ------------------------------------------------------------------------
     for (size_t n = 0; n < N; ++n) {
         dcomp z_n;
@@ -34,25 +36,18 @@ void z_vec(const vector<dcomp> phi_offsets, const
             z_n += dcomp(*Br++, *Bi++) * exp(- J * phi_offsets[k]);
         }
 
-        Z[n] = z_n;
-    }
-}
-
-// Returns the entropy of the complex image `Z`
-double H(vector<dcomp> Z) {
-    double Ez = 0, entropy = 0;
-
-    // Returns the total image energy of the complex image Z given the magnitude of
-    // the pixels in Z
-    for (vector<dcomp>::iterator z = Z.begin(); z != Z.end(); ++z) {
         // TODO: Could be faster to not use `conj.real()` and instead use a*a, b*b
-        *z = *z * conj(*z);
+        Z_mag[n] = z_n * conj(z_n);
+    }
+
+    // Returns the total image energy of the complex image Z_mag given the magnitude of
+    // the pixels in Z_mag
+    for (vector<dcomp>::iterator z = Z_mag.begin(); z != Z_mag.end(); ++z) {
         Ez += z->real();
     }
 
-    for (vector<dcomp>::iterator z_mag = Z.begin(); z_mag != Z.end(); ++z_mag) {
+    for (vector<dcomp>::iterator z_mag = Z_mag.begin(); z_mag != Z_mag.end(); ++z_mag) {
         double val = z_mag->real();
-        // mxAssert(z_mag->imag() == 0, "");
         val /= Ez;
         entropy += val * log(val);
     }
@@ -70,9 +65,7 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
 
     const double delta = 1;
 
-    vector<dcomp> Z(N, 0);
-
-    vector<dcomp> phi_offsets(K, 0);
+    vector<dcomp> phi_offsets(K);
     for (vector<dcomp>::iterator phi_i = phi_offsets.begin(); phi_i !=
             phi_offsets.end(); ++phi_i)
     {
@@ -80,9 +73,8 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
     }
 
     mexPrintf("In gradH, about to compute Z\n");
-    z_vec(phi_offsets, Br, Bi, Z, K, B_len);
     mexPrintf("Computed Z\n");
-    double H_not = H(Z);
+    double H_not = H(phi_offsets, Br, Bi, K, B_len);
     mexPrintf("Computed H_not\n");
 
     for (size_t k = 0; k < K; ++k) {
@@ -92,9 +84,9 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
 
         phi_offsets[k].real(phi_offsets[k].real() + delta);
 
-        z_vec(phi_offsets, Br, Bi, Z, K, B_len);
+        double H_i = H(phi_offsets, Br, Bi, K, B_len);
 
-        grad[k] = (H(Z) - H_not) / delta;
+        grad[k] = (H_i - H_not) / delta;
     }
 }
 
