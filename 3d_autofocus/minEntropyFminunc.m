@@ -41,7 +41,7 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
     tempEntropy = H_matlab(focusedImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
-    if (tempEntropy < minEntropy && minEntropy - tempEntropy > 0.5) % break if decreases in entropy are small
+    if (tempEntropy < minEntropy) % break if decreases in entropy are small
         minIdx = l;
         minEntropy = tempEntropy;
     else
