@@ -1,4 +1,4 @@
 RawRadarData.mat
 imageCube.mat
-image.o
-image.mexmaci64
+*.o
+*.mexmaci64

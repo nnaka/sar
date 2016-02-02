@@ -36,9 +36,9 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   B = B_tmp;
   clear('B_tmp');
   while (1) % phi_offsets(1) = 0
-    phi_offsets(l, :) = phi_offsets(l - 1, :) - s * gradH(phi_offsets(l - 1, :), B);
-    focusedImage = image(complex(phi_offsets(l, :)), B);
-    tempEntropy = H(focusedImage);
+    phi_offsets(l, :) = phi_offsets(l - 1, :) - s * grad_h(complex(phi_offsets(l - 1, :)), B);
+    focusedImage = z_vec(complex(phi_offsets(l, :)), B);
+    tempEntropy = H_matlab(focusedImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
     if (tempEntropy < minEntropy && minEntropy - tempEntropy > 0.5) % break if decreases in entropy are small
@@ -68,29 +68,8 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   end
 end
 
-function [ grad ] = gradH( phi_offsets, B )
-    K = numel(phi_offsets);
-    grad = zeros(1, K);
-
-    delta = 1; % arbitrary constant for finite difference
-
-    % k x k identity matrix in MATLAB
-    ident = eye(K);
-
-    fprintf('In gradH, about to compute Z\n');
-    Z = image(complex(phi_offsets), B);
-    fprintf('Computed Z\n');
-    H_not = H(Z);
-    fprintf('Computed H_not\n');
-
-    parfor k = 1:K
-      Z = image(complex(phi_offsets + transpose(ident(:, k) * delta)), B);
-      grad(k) = (H(Z) - H_not) / delta;
-    end
-end
-
 % Returns the entropy of the complex image `Z`
-function [ entropy ] = H( Z )
+function [ entropy ] = H_matlab( Z )
   Z_mag = Z .* conj(Z);         
   Ez = findEz(Z_mag);
 
@@ -98,22 +77,6 @@ function [ entropy ] = H( Z )
   % TODO: (joshpfosi) Why is this negated?
   entropy = - sum(Z_intensity .* log(Z_intensity));
 end
-
-% Defines z_vec(phi), where B is a 1D representation of the image as described
-% above.
-% function [ Z ] = image(phi_offsets, B)
-%   K = numel(phi_offsets);
-%   N = length(B) / K;
-%   
-%   % Form 1D array of e^-j * phi_i which repeats every kth element to allow for
-%   % simple elementwise multiplication on B. See equation (2) in 'tech_report.pdf'.
-%   arr = repmat(exp(-1j * phi_offsets), 1, N);
-%   
-%   % `reshape(B .* arr, K, [])` returns a matrix with `N` columns and `K` rows.
-%   % Each column vector contains each of `K` contributions to the pixel `i`, so
-%   % summing each column vector results in `Z`.
-%   Z = sum(reshape(B .* arr, K, []), 1);
-% end
 
 % Returns the total image energy of the complex image Z given the magnitude of
 % the pixels in Z
