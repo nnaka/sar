@@ -40,13 +40,11 @@ void z_vec(const double *phi_offsets_r, const double *phi_offsets_i, const
     // ------------------------------------------------------------------------
     // Form Z
     // ------------------------------------------------------------------------
-    size_t i = 0;
     for (size_t n = 0; n < N; ++n) {
         dcomp z_n;
 
         for (size_t k = 0; k < K; ++k) {
-            z_n += dcomp(Br[i], Bi[i]) * phi_offsets[k];
-            ++i;
+            z_n += dcomp(*Br++, *Bi++) * phi_offsets[k];
         }
 
         Zr[n] = z_n.real();
@@ -55,32 +53,24 @@ void z_vec(const double *phi_offsets_r, const double *phi_offsets_i, const
 }
 
 // Returns the entropy of the complex image `Z`
-// TODO: This function is GROSSLY inefficient but correct
 double H(const double *Zr, const double *Zi, size_t N) {
     double Ez = 0, entropy = 0;
 
-    vector<dcomp> Z(N, 0); vector<double> Z_mag(N, 0);
-
-    for (size_t n = 0; n < N; ++n) {
-        Z[n] = dcomp(Zr[n], Zi[n]);
-    }
+    double Z_mag[N];
 
     // Returns the total image energy of the complex image Z given the magnitude of
     // the pixels in Z
-    for (size_t i = 0; i < N; ++i) {
-        Z_mag[i] = (Z[i] * conj(Z[i])).real();
+    dcomp z_n;
+    for (double *z_mag = Z_mag; z_mag != Z_mag + N; ++z_mag) {
+        // TODO: Could be faster to not use `conj.real()` and instead use a*a, b*b
+        z_n.real(*Zr++); z_n.imag(*Zi++);
+        *z_mag = (z_n * conj(z_n)).real();
+        Ez += *z_mag;
     }
 
-    for (vector<double>::iterator it = Z_mag.begin(); it != Z_mag.end(); ++it) {
-        Ez += *it;
-    }
-
-    for (vector<double>::iterator it = Z_mag.begin(); it != Z_mag.end(); ++it) {
-        *it /= Ez;
-    }
-
-    for (vector<double>::iterator it = Z_mag.begin(); it != Z_mag.end(); ++it) {
-        entropy += *it * log(*it);
+    for (double *z_mag = Z_mag; z_mag != Z_mag + N; ++z_mag) {
+        *z_mag /= Ez;
+        entropy += *z_mag * log(*z_mag);
     }
 
     return - entropy;
