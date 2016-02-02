@@ -71,11 +71,7 @@ for n = 1:nY
     yOut(:,:,n) = makePulsOn(x0,y0,z0,x,y,z,tauP,fs,fc,c,n,nY);
     
 end 
-
-fprintf('Saving raw radar data... \n');
-save RawRadarData.mat yOut -v7.3
-
-end 
+end  % FormPulses
 
 function [yOut] = makePulsOn(x0,y0,z0,x,y,z,tauP,fs,f0,c, curRow, numRows)
 % x0,y0,z0 - Lx1 list of target positions
@@ -189,19 +185,3 @@ for j = startIdx:stopIdx - 2
 end
 windowedPulse = tempPulse;
 end 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -4,13 +4,12 @@
 %
 % B is a 4D array of b_k values
 % L is the number of iterations
-function [ out, minEntropy, maxEntropy ] = minEntropyFminunc( B, L )
-  THRESHOLD = 0.05;
-  MAX_ITER = 50;
+function [ out, minEntropy ] = minEntropyFminunc( B, L )
+  MAX_ITER = 10;
   X = size(B,1); Y = size(B,2); Z = size(B,3); K = size(B,4);
   l = 2;
   minIdx = 1;
-  minEntropy = Inf;
+  minEntropy = 100;
 
   % Holds array of potentially minimizing phase offsets - 100 is an arbitrary
   % maximum number of iterations
@@ -19,7 +18,7 @@ function [ out, minEntropy, maxEntropy ] = minEntropyFminunc( B, L )
   phi_offsets = zeros(MAX_ITER, K);
 
   % Step size parameter for gradient descent
-  s = 100;
+  s = 10;
   
   % As iterating over a 4D array reduces spatial locality, convert `B` once
   % into a 1D array and then convert back after minimization of phi is
@@ -36,35 +35,20 @@ function [ out, minEntropy, maxEntropy ] = minEntropyFminunc( B, L )
   
   B = B_tmp;
   clear('B_tmp');
-
-  maxEntropy = H(image(phi_offsets(1, :), B));
-
   while (1) % phi_offsets(1) = 0
     phi_offsets(l, :) = phi_offsets(l - 1, :) - s * gradH(phi_offsets(l - 1, :), B);
-    focusedImage = image(phi_offsets(l, :), B);
+    focusedImage = image(complex(phi_offsets(l, :)), B);
     tempEntropy = H(focusedImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
-
-    if (minEntropy < tempEntropy)
-        s = s / 2;
-
-        fprintf('Reducing step size to %d\n', s);
-
-        if (s < THRESHOLD)
-          fprintf('s is below threshold so breaking');
-          break;
-        end
-    else
-        if (minEntropy - tempEntropy < THRESHOLD) 
-          fprintf('%d - %d = %d < 0.001\n', minEntropy, tempEntropy, minEntropy - tempEntropy);
-          break; % if decreases in entropy are small
-        end
-
+    if (tempEntropy < minEntropy && minEntropy - tempEntropy > 0.5) % break if decreases in entropy are small
         minIdx = l;
         minEntropy = tempEntropy;
-        l = l + 1;
+    else
+        break;
     end
+    s = s / 1;
+    l = l + 1;
   end
   
   % `focusedImage` now contains the 1D representation of the entropy-minimized
@@ -94,13 +78,13 @@ function [ grad ] = gradH( phi_offsets, B )
     ident = eye(K);
 
     fprintf('In gradH, about to compute Z\n');
-    Z = image(phi_offsets, B);
+    Z = image(complex(phi_offsets), B);
     fprintf('Computed Z\n');
     H_not = H(Z);
     fprintf('Computed H_not\n');
 
     parfor k = 1:K
-      Z = image(phi_offsets + transpose(ident(:, k) * delta), B);
+      Z = image(complex(phi_offsets + transpose(ident(:, k) * delta)), B);
       grad(k) = (H(Z) - H_not) / delta;
     end
 end
@@ -117,19 +101,19 @@ end
 
 % Defines z_vec(phi), where B is a 1D representation of the image as described
 % above.
-function [ Z ] = image(phi_offsets, B)
-  K = numel(phi_offsets);
-  N = length(B) / K;
-  
-  % Form 1D array of e^-j * phi_i which repeats every kth element to allow for
-  % simple elementwise multiplication on B. See equation (2) in 'tech_report.pdf'.
-  arr = repmat(exp(-1j * phi_offsets), 1, N);
-  
-  % `reshape(B .* arr, K, [])` returns a matrix with `N` columns and `K` rows.
-  % Each column vector contains each of `K` contributions to the pixel `i`, so
-  % summing each column vector results in `Z`.
-  Z = sum(reshape(B .* arr, K, []), 1);
-end
+% function [ Z ] = image(phi_offsets, B)
+%   K = numel(phi_offsets);
+%   N = length(B) / K;
+%   
+%   % Form 1D array of e^-j * phi_i which repeats every kth element to allow for
+%   % simple elementwise multiplication on B. See equation (2) in 'tech_report.pdf'.
+%   arr = repmat(exp(-1j * phi_offsets), 1, N);
+%   
+%   % `reshape(B .* arr, K, [])` returns a matrix with `N` columns and `K` rows.
+%   % Each column vector contains each of `K` contributions to the pixel `i`, so
+%   % summing each column vector results in `Z`.
+%   Z = sum(reshape(B .* arr, K, []), 1);
+% end
 
 % Returns the total image energy of the complex image Z given the magnitude of
 % the pixels in Z

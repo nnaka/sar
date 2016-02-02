@@ -1,8 +1,4 @@
 RawRadarData.mat
-imageCube*
-*.o
-*.mexmaci64
-*.dSYM
-grad_h_driver
-callgrind*
-data
+imageCube.mat
+image.o
+image.mexmaci64

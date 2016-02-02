@@ -83,7 +83,7 @@ addNoise = false;               % true will inject GPS noise into aperture
 
 
 %% Process formed data to create an image
-imgSize = [10 10 10];        % voxels [ X Y Z ]
+imgSize = [50 50 50];        % voxels [ X Y Z ]
 sceneSize = [20 20 20];      % meters [ X Y Z ] 
 form_pulse_set = true;         % set to true if image is to be autofocused
 % imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
@@ -91,7 +91,7 @@ form_pulse_set = true;         % set to true if image is to be autofocused
 % For testing purposes, we load imageSet strictly from a file so it is
 % consistent.
 
-load('imageSet50by50_9pts_no_noise')
+load('imageSet30by30_9pts_no_noise');
 
 %% Perform minimum entropy Autofocus 
 
