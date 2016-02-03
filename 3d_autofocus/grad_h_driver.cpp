@@ -1,17 +1,11 @@
-// grad_h.cpp
-// Computes a finite difference approximation to H given phase offsets and
-// complex pulse history
-// Usage:
-//        gradVector = gradH(phi_offset_vector, image_vector)
-//
-
-#include "mex.h"
-#include "matrix.h"
+// Driver program for 'gradH' for profiling
 
 #include "entropy.h"
 
-#include <cmath>
+#include <stdio.h>
 #include <vector>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 
 using namespace std;
 
@@ -22,7 +16,6 @@ double H(const vector<dcomp> &phi_offsets, const double *Br, const double *Bi,
     size_t N = B_len / K;
     double Ez = 0, entropy = 0;
 
-    mxAssert(B_len % K == 0, "length(B) should always be a multiple of K");
 
     vector<dcomp> Z_mag(N);
 
@@ -69,10 +62,7 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
         *phi_i = dcomp(*phi_offsets_r++, *phi_offsets_i++);
     }
 
-    mexPrintf("In gradH, about to compute Z\n");
-    mexPrintf("Computed Z\n");
     double H_not = H(phi_offsets, Br, Bi, K, B_len);
-    mexPrintf("Computed H_not\n");
 
     for (size_t k = 0; k < K; ++k) {
         if (k > 0) {
@@ -87,50 +77,44 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
     }
 }
 
-/* The gateway function */
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-    double *phi_offsets_r, *phi_offsets_i, *Br, *Bi, *grad;
-    size_t K, B_len, N;
 
-    if (nrhs != 2) {
-        mexErrMsgIdAndTxt("Autofocus:image:nrhs", "Two inputs required.");
+double drand() {
+    return (double)rand() / (double)rand();
+}
+
+int main() {
+    const size_t K     = 400;
+    const size_t B_len = 400 * 5 * 5 * 5;
+
+    double *pr = new double[K];
+    double *pi = new double[K];
+    double *Br = new double[B_len];
+    double *Bi = new double[B_len];
+
+    double *grad = new double[K];
+
+    srand(time(0));
+
+    for (size_t k = 0; k < K; ++k) {
+        pr[k] = drand();
+        pi[k] = drand();
     }
 
-    if (nlhs != 1) {
-        mexErrMsgIdAndTxt("Autofocus:image:nlhs", "One output required.");
+    for (size_t b = 0; b < B_len; ++b) {
+        Br[b] = drand();
+        Bi[b] = drand();
     }
 
-    if (!mxIsComplex(prhs[0])) {
-        mexErrMsgIdAndTxt("Autofocus:image:nrhs",
-                "'phi_offsets' must be complex.");
+    for (int i = 0; i < 3; ++i) {
+        printf("Status: i=%d\n", i);
+        gradH(pi, pr, Br, Bi, grad, K, B_len);
     }
 
-    if (mxGetM(prhs[0]) != 1) {
-        mexErrMsgIdAndTxt("Autofocus:image:nrhs",
-                "'phi_offsets' must be a row vector.");
-    }
+    free(pr);
+    free(pi);
+    free(Br);
+    free(Bi);
+    free(grad);
 
-    if (!mxIsComplex(prhs[1]) || mxGetM(prhs[1]) != 1) {
-        mexErrMsgIdAndTxt("Autofocus:image:nrhs",
-                "'B' must be complex.");
-    }
-
-    if (mxGetM(prhs[1]) != 1) {
-        mexErrMsgIdAndTxt("Autofocus:image:nrhs",
-                "'B' must be a row vector.");
-    }
-
-    // Get pointers to real and imaginary parts of input arrays
-    phi_offsets_r = mxGetPr(prhs[0]);
-    phi_offsets_i = mxGetPi(prhs[0]);
-    Br            = mxGetPr(prhs[1]);
-    Bi            = mxGetPi(prhs[1]);
-
-    K     = mxGetN(prhs[0]);
-    B_len = mxGetN(prhs[1]);
-
-    plhs[0] = mxCreateDoubleMatrix(1, K, mxREAL);
-    grad      = mxGetPr(plhs[0]);
-
-    gradH(phi_offsets_r, phi_offsets_i, Br, Bi, grad, K, B_len);
+    return 0;
 }
