@@ -8,15 +8,14 @@
 #include "mex.h"
 #include "matrix.h"
 
-#include "entropy.h"
-
 #include <cmath>
-#include <vector>
 
 using namespace std;
 
+const double delta = 1;
+
 // Returns the entropy of the complex image `Z`
-double H(const vector<dcomp> &phi_offsets, const double *Br, const double *Bi,
+double H(const double *Pr, const double *Pi, const double *Br, const double *Bi,
         size_t K, size_t B_len)
 {
     size_t N = B_len / K;
@@ -24,34 +23,43 @@ double H(const vector<dcomp> &phi_offsets, const double *Br, const double *Bi,
 
     mxAssert(B_len % K == 0, "length(B) should always be a multiple of K");
 
-    vector<dcomp> Z_mag(N);
+    double *Z_mag = new double[N];
 
     // ------------------------------------------------------------------------
     // Form Z_mag
     // ------------------------------------------------------------------------
+    double z_r, z_i, a, b, c, d;
     for (size_t n = 0; n < N; ++n) {
-        dcomp z_n;
+        z_r = 0; z_i = 0;
 
         for (size_t k = 0; k < K; ++k) {
-            z_n += dcomp(*Br++, *Bi++) * exp(- J * phi_offsets[k]);
+            // `b_i * e^-j*phi_i` in rectangular form
+
+            a = *Br++ * exp(Pi[k]);
+            b = *Bi++ * exp(Pi[k]);
+            c = cos(Pr[k]);
+            d = sin(Pr[k]);
+
+            z_r += (a * c + b * d);
+            z_i += (b * c - a * d);
         }
 
-        // TODO: Could be faster to not use `conj.real()` and instead use a*a, b*b
-        Z_mag[n] = z_n * conj(z_n);
+        Z_mag[n] = z_r * z_r + z_i * z_i;
     }
 
-    // Returns the total image energy of the complex image Z_mag given the magnitude of
-    // the pixels in Z_mag
-    for (vector<dcomp>::iterator z = Z_mag.begin(); z != Z_mag.end(); ++z) {
-        Ez += z->real();
+    // Returns the total image energy of the complex image Z_mag given the
+    // magnitude of // the pixels in Z_mag
+    for (size_t n = 0; n < N; ++n) {
+        Ez += Z_mag[n];
     }
 
-    for (vector<dcomp>::iterator z_mag = Z_mag.begin(); z_mag != Z_mag.end(); ++z_mag) {
-        double val = z_mag->real();
-        val /= Ez;
-        entropy += val * log(val);
+    double z_intensity = 0;
+    for (size_t n = 0; n < N; ++n) {
+        z_intensity = Z_mag[n] / Ez;
+        entropy += z_intensity * log(z_intensity);
     }
 
+    delete Z_mag;
     return - entropy;
 }
 
@@ -60,28 +68,19 @@ double H(const vector<dcomp> &phi_offsets, const double *Br, const double *Bi,
 void gradH(double *phi_offsets_r, double *phi_offsets_i, const
         double *Br, const double *Bi, double *grad, size_t K, size_t B_len)
 {
-    const double delta = 1;
-
-    vector<dcomp> phi_offsets(K);
-    for (vector<dcomp>::iterator phi_i = phi_offsets.begin(); phi_i !=
-            phi_offsets.end(); ++phi_i)
-    {
-        *phi_i = dcomp(*phi_offsets_r++, *phi_offsets_i++);
-    }
-
     mexPrintf("In gradH, about to compute Z\n");
     mexPrintf("Computed Z\n");
-    double H_not = H(phi_offsets, Br, Bi, K, B_len);
+    double H_not = H(phi_offsets_r, phi_offsets_i, Br, Bi, K, B_len);
     mexPrintf("Computed H_not\n");
 
     for (size_t k = 0; k < K; ++k) {
         if (k > 0) {
-            phi_offsets[k - 1].real(phi_offsets[k - 1].real() - delta);
+            phi_offsets_r[k - 1] -= delta;
         }
 
-        phi_offsets[k].real(phi_offsets[k].real() + delta);
+        phi_offsets_r[k] += delta;
 
-        double H_i = H(phi_offsets, Br, Bi, K, B_len);
+        double H_i = H(phi_offsets_r, phi_offsets_i, Br, Bi, K, B_len);
 
         grad[k] = (H_i - H_not) / delta;
     }
@@ -130,7 +129,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     B_len = mxGetN(prhs[1]);
 
     plhs[0] = mxCreateDoubleMatrix(1, K, mxREAL);
-    grad      = mxGetPr(plhs[0]);
+    grad    = mxGetPr(plhs[0]);
 
     gradH(phi_offsets_r, phi_offsets_i, Br, Bi, grad, K, B_len);
 }
