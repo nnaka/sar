@@ -91,7 +91,7 @@ form_pulse_set = true;         % set to true if image is to be autofocused
 % For testing purposes, we load imageSet strictly from a file so it is
 % consistent.
 
-load('imageSet30by30_9pts_no_noise');
+load('imageSet50by50_9pts_no_noise');
 
 %% Perform minimum entropy Autofocus 
 

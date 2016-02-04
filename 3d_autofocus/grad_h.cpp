@@ -45,11 +45,9 @@ double H(const double *Pr, const double *Pi, const double *Br, const double *Bi,
         }
 
         Z_mag[n] = z_r * z_r + z_i * z_i;
-    }
 
-    // Returns the total image energy of the complex image Z_mag given the
-    // magnitude of // the pixels in Z_mag
-    for (size_t n = 0; n < N; ++n) {
+        // Returns the total image energy of the complex image Z_mag given the
+        // magnitude of // the pixels in Z_mag
         Ez += Z_mag[n];
     }
 

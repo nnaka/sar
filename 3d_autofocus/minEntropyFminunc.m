@@ -5,7 +5,7 @@
 % B is a 4D array of b_k values
 % L is the number of iterations
 function [ out, minEntropy ] = minEntropyFminunc( B, L )
-  MAX_ITER = 10;
+  MAX_ITER = 50;
   X = size(B,1); Y = size(B,2); Z = size(B,3); K = size(B,4);
   l = 2;
   minIdx = 1;
@@ -41,12 +41,14 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
     tempEntropy = H_matlab(focusedImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
-    if (tempEntropy < minEntropy) % break if decreases in entropy are small
+
+    if (minEntropy - tempEntropy < 0.01)
+        break; % if decreases in entropy are small
+    else
         minIdx = l;
         minEntropy = tempEntropy;
-    else
-        break;
     end
+
     s = s / 1;
     l = l + 1;
   end
