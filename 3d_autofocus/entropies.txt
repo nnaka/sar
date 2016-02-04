@@ -15,3 +15,13 @@ Running w/ 9 points and 30 by 30 pulses:
 
 Gradient descent: 2.755788, 51.906 s
 Brute force: 2.428918, 237.111 s
+
+Running w/ 9 points and 50 by 50 pulses:
+
+Gradient descent (C++ port): 2.153798, 750 s
+Gradient descent: 2.153798, 541.519 s
+
+Running w/ 9 points and 50 by 50 pulses (1 ITERATION):
+
+Gradient descent (C++ port): 2.197130, 107.421 s
+Gradient descent: 2.197130, 70.700 s

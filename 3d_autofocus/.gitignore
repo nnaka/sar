@@ -1,2 +1,4 @@
 ./RawRadarData.mat
 ./imageCube.mat
+*.mexmaci64
+*.o
