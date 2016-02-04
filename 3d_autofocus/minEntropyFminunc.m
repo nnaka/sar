@@ -37,8 +37,8 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   clear('B_tmp');
   while (1) % phi_offsets(1) = 0
     phi_offsets(l, :) = phi_offsets(l - 1, :) - s * grad_h(complex(phi_offsets(l - 1, :)), B);
-    focusedImage = z_vec_matlab(complex(phi_offsets(l, :)), B);
-    tempEntropy = H_matlab(focusedImage);
+    focusedImage = image(complex(phi_offsets(l, :)), B);
+    tempEntropy = H(focusedImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
 
@@ -72,7 +72,7 @@ end
 
 % Defines z_vec(phi), where B is a 1D representation of the image as described
 % above.
-function [ Z ] = z_vec_matlab(phi_offsets, B)
+function [ Z ] = image(phi_offsets, B)
   K = numel(phi_offsets);
   N = length(B) / K;
 
@@ -87,7 +87,7 @@ function [ Z ] = z_vec_matlab(phi_offsets, B)
 end
 
 % Returns the entropy of the complex image `Z`
-function [ entropy ] = H_matlab( Z )
+function [ entropy ] = H( Z )
   Z_mag = Z .* conj(Z);         
 
   Ez = sum(Z_mag);
