@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <vector>
+#include <thread>
 
 using namespace std;
 
@@ -82,14 +83,27 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
     double H_not = H(Pr, Pi, Br, Bi, K, B_len);
     mexPrintf("Computed H_not\n");
 
-    for (size_t k = 0; k < K; ++k) {
-        if (k > 0) {
-            Pr[k - 1] -= delta;
+    const unsigned int nthreads = 16;
+    thread threads[nthreads];
+
+    auto k = 0;
+    while (k < K) {
+        for (auto i = 0; i < nthreads; ++i) {
+            if (k > 0) {
+                Pr[k - 1] -= delta;
+            }
+
+            Pr[k] += delta;
+
+            threads[i] = thread(populate_grad_k, &grad[k], H_not,
+                        Pr, Pi, Br, Bi, K, B_len);
+
+            ++k;
         }
 
-        Pr[k] += delta;
-
-        populate_grad_k(&grad[k], H_not, Pr, Pi, Br, Bi, K, B_len);
+        for (auto i = 0; i < nthreads; ++i) {
+            threads[i].join();
+        }
     }
 }
 

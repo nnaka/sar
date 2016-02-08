@@ -1,15 +1,20 @@
 // Driver program for 'gradH' for profiling
 
 #include <stdio.h>
-#include <vector>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
+#include <cmath>
+#include <vector>
+#include <thread>
+
 using namespace std;
 
+const double delta = 1;
+
 // Returns the entropy of the complex image `Z`
-double H(const double *Pr, const double *Pi, const double *Br, const double *Bi,
-        size_t K, size_t B_len)
+double H(const vector<double> Pr, const vector<double> Pi, const double *Br,
+        const double *Bi, size_t K, size_t B_len)
 {
     size_t N = B_len / K;
     double Ez = 0, entropy = 0;
@@ -54,28 +59,46 @@ double H(const double *Pr, const double *Pi, const double *Br, const double *Bi,
     return - entropy;
 }
 
+void populate_grad_k(double *grad_i, double H_not, const vector<double> Pr,
+        const vector<double> Pi, const double *Br, const double *Bi, size_t K,
+        size_t B_len)
+{
+    double H_i = H(Pr, Pi, Br, Bi, K, B_len);
+    *grad_i = (H_i - H_not) / delta;
+}
+
 // TODO: Nice doc comments
-// TODO: Pass references to vectors B, and phi_offsets?
 void gradH(double *phi_offsets_r, double *phi_offsets_i, const
         double *Br, const double *Bi, double *grad, size_t K, size_t B_len)
 {
-    const double delta = 1;
+    vector<double> Pr(phi_offsets_r, phi_offsets_r + K);
+    vector<double> Pi(phi_offsets_i, phi_offsets_i + K);
 
-    double H_not = H(phi_offsets_r, phi_offsets_i, Br, Bi, K, B_len);
+    double H_not = H(Pr, Pi, Br, Bi, K, B_len);
 
-    for (size_t k = 0; k < K; ++k) {
-        if (k > 0) {
-            phi_offsets_r[k - 1] -= delta;
+    const unsigned int nthreads = 16;
+    thread threads[nthreads];
+
+    auto k = 0;
+    while (k < K) {
+        for (auto i = 0; i < nthreads; ++i) {
+            if (k > 0) {
+                Pr[k - 1] -= delta;
+            }
+
+            Pr[k] += delta;
+
+            threads[i] = thread(populate_grad_k, &grad[k], H_not,
+                        Pr, Pi, Br, Bi, K, B_len);
+
+            ++k;
         }
 
-        phi_offsets_r[k] += delta;
-
-        double H_i = H(phi_offsets_r, phi_offsets_i, Br, Bi, K, B_len);
-
-        grad[k] = (H_i - H_not) / delta;
+        for (auto i = 0; i < nthreads; ++i) {
+            threads[i].join();
+        }
     }
 }
-
 
 double drand() {
     return (double)rand() / (double)rand();
