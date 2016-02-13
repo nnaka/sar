@@ -5,3 +5,4 @@ imageCube.mat
 *.dSYM
 grad_h_driver
 callgrind*
+data

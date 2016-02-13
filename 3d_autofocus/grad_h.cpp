@@ -14,7 +14,9 @@
 
 using namespace std;
 
-const double delta = 1;
+static const double delta = 1;
+static const auto nthreads = 8;
+static thread threads[nthreads];
 
 // Returns the entropy of the complex image `Z`
 double H(const vector<double> Pr, const vector<double> Pi, const double *Br,
@@ -30,17 +32,17 @@ double H(const vector<double> Pr, const vector<double> Pi, const double *Br,
     // ------------------------------------------------------------------------
     // Form Z_mag
     // ------------------------------------------------------------------------
-    double z_r, z_i, a, b, c, d;
+    double z_r, z_i, a, b, c, d, e;
     for (size_t n = 0; n < N; ++n) {
         z_r = 0; z_i = 0;
 
-        for (size_t k = 0; k < K; ++k) {
-            // `b_i * e^-j*phi_i` in rectangular form
+        for (auto pr(Pr.begin()), pi(Pi.begin()); pr != Pr.end(); ++pr, ++pi) {
+            e = exp(*pi);
 
-            a = *Br++ * exp(Pi[k]);
-            b = *Bi++ * exp(Pi[k]);
-            c = cos(Pr[k]);
-            d = sin(Pr[k]);
+            a = *Br++ * e;
+            b = *Bi++ * e;
+            c = cos(*pr);
+            d = sin(*pr);
 
             z_r += (a * c + b * d);
             z_i += (b * c - a * d);
@@ -83,27 +85,28 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
     double H_not = H(Pr, Pi, Br, Bi, K, B_len);
     mexPrintf("Computed H_not\n");
 
-    const unsigned int nthreads = 16;
-    thread threads[nthreads];
-
-    auto k = 0;
-    while (k < K) {
-        for (auto i = 0; i < nthreads; ++i) {
-            if (k > 0) {
-                Pr[k - 1] -= delta;
+    auto Pr_k(Pr.begin());
+    while (Pr_k != Pr.end()) {
+        int i;
+        for (i = 0; i < nthreads && Pr_k != Pr.end(); ++i) {
+            if (Pr_k != Pr.begin()) {
+                *(Pr_k - 1) -= delta;
             }
 
-            Pr[k] += delta;
+            *Pr_k++ += delta;
 
-            threads[i] = thread(populate_grad_k, &grad[k], H_not,
+            threads[i] = thread(populate_grad_k, grad++, H_not,
                         Pr, Pi, Br, Bi, K, B_len);
-
-            ++k;
         }
 
-        for (auto i = 0; i < nthreads; ++i) {
-            threads[i].join();
+        // Keep main thread busy but only if we have more to do
+        if (Pr_k != Pr.end()) {
+            *(Pr_k - 1) -= delta;
+            *Pr_k++ += delta;
+            populate_grad_k(grad++, H_not, Pr, Pi, Br, Bi, K, B_len);
         }
+
+        while (i > 0) { threads[--i].join(); }
     }
 }
 

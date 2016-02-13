@@ -100,7 +100,9 @@ load('imageSet50by50_9pts_no_noise');
 if numel(size(imageSet)) == 4                 
     num_iter = 1;           % number of iterations to run autofocus
     % [focusedImage, minEntropy] = minEntropyAutoFocus(imageSet, num_iter);
+    tic
     [focusedImage, minEntropy] = minEntropyFminunc(imageSet, num_iter);
+    toc
     % focusedImage = imageSet;
 else 
     focusedImage = imageSet;
@@ -110,7 +112,7 @@ end
 
 dB = 10;
 fprintf('Min Entropy: %f\n', minEntropy);
-ViewCube(focusedImage, dB);
+% ViewCube(focusedImage, dB);
 
 
 % save imageCube.mat focusedImage -v7.3
