@@ -87,9 +87,11 @@ int main(int argc, char *argv[]) {
     PulseHistory ph(argv[2], argv[3]);
 
     do { ph.collect(); } while (!check_for(sock, STOP_COLLECT));
-
+    
     // TODO: (joshpfosi) Print ph
-
+    
+    // std::cout << ph.PulseHistory;
+    
     close(sock);
 
     return 0;

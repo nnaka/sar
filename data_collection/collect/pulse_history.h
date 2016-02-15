@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <stdlib.h>
 
 #include "piksi.h"
 #include "pulson.h"

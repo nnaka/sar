@@ -95,7 +95,7 @@ void Piksi::collect(msg_pos_llh_t &pos, msg_gps_time_t &gps) {
         LOG("Insufficient (%d) callbacks received, expected %d",
                 callbacks_rcvd, NUM_CALLBACKS);
         ret = sbp_process(&s, &piksi_port_read);
-    } while (ret >= 0 && callbacks_rcvd < NUM_CALLBACKS);
+    } while (ret >= 0 && callbacks_rcvd < NUM_CALLBACKS - 1);
 
     check_or_exit(ret < 0, "sbp_process error");
 

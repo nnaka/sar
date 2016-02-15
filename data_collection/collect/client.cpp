@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 
     cout << "Press ENTER to stop collection";
     cin.ignore();
-
+ 
     write_message(fd, STOP_COLLECT);
 
     close(fd);
