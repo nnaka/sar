@@ -19,8 +19,8 @@ static const auto nthreads = 8;
 static thread threads[nthreads];
 
 // Returns the entropy of the complex image `Z`
-double H(const vector<double> Pr, const vector<double> Pi, const double *Br,
-        const double *Bi, size_t K, size_t B_len)
+double H(const vector<double> P, const double *Br, const double *Bi,
+        size_t K, size_t B_len)
 {
     size_t N = B_len / K;
     double Ez = 0, entropy = 0;
@@ -36,13 +36,11 @@ double H(const vector<double> Pr, const vector<double> Pi, const double *Br,
     for (size_t n = 0; n < N; ++n) {
         z_r = 0; z_i = 0;
 
-        for (auto pr(Pr.begin()), pi(Pi.begin()); pr != Pr.end(); ++pr, ++pi) {
-            e = exp(*pi);
-
-            a = *Br++ * e;
-            b = *Bi++ * e;
-            c = cos(*pr);
-            d = sin(*pr);
+        for (auto pr : P) {
+            a = *Br++;
+            b = *Bi++;
+            c = cos(pr);
+            d = sin(pr);
 
             z_r += (a * c + b * d);
             z_i += (b * c - a * d);
@@ -65,45 +63,44 @@ double H(const vector<double> Pr, const vector<double> Pi, const double *Br,
     return - entropy;
 }
 
-void populate_grad_k(double *grad_i, double H_not, const vector<double> Pr,
-        const vector<double> Pi, const double *Br, const double *Bi, size_t K,
+void populate_grad_k(double *grad_i, double H_not, const vector<double> P,
+        const double *Br, const double *Bi, size_t K,
         size_t B_len)
 {
-    double H_i = H(Pr, Pi, Br, Bi, K, B_len);
+    double H_i = H(P, Br, Bi, K, B_len);
     *grad_i = (H_i - H_not) / delta;
 }
 
 // TODO: Nice doc comments
-void gradH(double *phi_offsets_r, double *phi_offsets_i, const
-        double *Br, const double *Bi, double *grad, size_t K, size_t B_len)
+void gradH(double *phi_offsets, const double *Br, const double *Bi,
+        double *grad, size_t K, size_t B_len)
 {
-    vector<double> Pr(phi_offsets_r, phi_offsets_r + K);
-    vector<double> Pi(phi_offsets_i, phi_offsets_i + K);
+    vector<double> P(phi_offsets, phi_offsets + K);
 
     mexPrintf("In gradH, about to compute Z\n");
     mexPrintf("Computed Z\n");
-    double H_not = H(Pr, Pi, Br, Bi, K, B_len);
+    double H_not = H(P, Br, Bi, K, B_len);
     mexPrintf("Computed H_not\n");
 
-    auto Pr_k(Pr.begin());
-    while (Pr_k != Pr.end()) {
+    auto Pr_k(P.begin());
+    while (Pr_k != P.end()) {
         int i;
-        for (i = 0; i < nthreads && Pr_k != Pr.end(); ++i) {
-            if (Pr_k != Pr.begin()) {
+        for (i = 0; i < nthreads && Pr_k != P.end(); ++i) {
+            if (Pr_k != P.begin()) {
                 *(Pr_k - 1) -= delta;
             }
 
             *Pr_k++ += delta;
 
             threads[i] = thread(populate_grad_k, grad++, H_not,
-                        Pr, Pi, Br, Bi, K, B_len);
+                        P, Br, Bi, K, B_len);
         }
 
         // Keep main thread busy but only if we have more to do
-        if (Pr_k != Pr.end()) {
+        if (Pr_k != P.end()) {
             *(Pr_k - 1) -= delta;
             *Pr_k++ += delta;
-            populate_grad_k(grad++, H_not, Pr, Pi, Br, Bi, K, B_len);
+            populate_grad_k(grad++, H_not, P, Br, Bi, K, B_len);
         }
 
         while (i > 0) { threads[--i].join(); }
@@ -112,7 +109,7 @@ void gradH(double *phi_offsets_r, double *phi_offsets_i, const
 
 /* The gateway function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-    double *phi_offsets_r, *phi_offsets_i, *Br, *Bi, *grad;
+    double *phi_offsets, *Br, *Bi, *grad;
     size_t K, B_len, N;
 
     if (nrhs != 2) {
@@ -123,9 +120,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mexErrMsgIdAndTxt("Autofocus:image:nlhs", "One output required.");
     }
 
-    if (!mxIsComplex(prhs[0])) {
+    if (mxIsComplex(prhs[0])) {
         mexErrMsgIdAndTxt("Autofocus:image:nrhs",
-                "'phi_offsets' must be complex.");
+                "'phi_offsets' must be real.");
     }
 
     if (mxGetM(prhs[0]) != 1) {
@@ -144,10 +141,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
     // Get pointers to real and imaginary parts of input arrays
-    phi_offsets_r = mxGetPr(prhs[0]);
-    phi_offsets_i = mxGetPi(prhs[0]);
-    Br            = mxGetPr(prhs[1]);
-    Bi            = mxGetPi(prhs[1]);
+    phi_offsets = mxGetPr(prhs[0]);
+    Br          = mxGetPr(prhs[1]);
+    Bi          = mxGetPi(prhs[1]);
 
     K     = mxGetN(prhs[0]);
     B_len = mxGetN(prhs[1]);
@@ -155,5 +151,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     plhs[0] = mxCreateDoubleMatrix(1, K, mxREAL);
     grad    = mxGetPr(plhs[0]);
 
-    gradH(phi_offsets_r, phi_offsets_i, Br, Bi, grad, K, B_len);
+    gradH(phi_offsets, Br, Bi, grad, K, B_len);
 }

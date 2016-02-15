@@ -36,8 +36,8 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   B = B_tmp;
   clear('B_tmp');
   while (1) % phi_offsets(1) = 0
-    phi_offsets(l, :) = phi_offsets(l - 1, :) - s * grad_h(complex(phi_offsets(l - 1, :)), B);
-    focusedImage = image(complex(phi_offsets(l, :)), B);
+    phi_offsets(l, :) = phi_offsets(l - 1, :) - s * grad_h(phi_offsets(l - 1, :), B);
+    focusedImage = image(phi_offsets(l, :), B);
     tempEntropy = H(focusedImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
