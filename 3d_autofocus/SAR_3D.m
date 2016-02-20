@@ -16,7 +16,7 @@ function [image_set] = SAR_3D(rawCollect, img_size, scene_size, form_pulse_set)
 
 
 %% Initialize parameters 
-addpath('Support');
+addpath('support');
 
 % User selectable
 ovsFac = 4;                  % Oversampling factor applied when interpolating

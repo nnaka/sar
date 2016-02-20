@@ -14,8 +14,8 @@
 
 using namespace std;
 
-static const double delta = 1;
-static const auto nthreads = 8;
+static const double delta = 1e-3;
+static const auto nthreads = 64 - 1;
 static thread threads[nthreads];
 
 // Returns the entropy of the complex image `Z`

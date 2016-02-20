@@ -42,15 +42,25 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
 
-    if (minEntropy - tempEntropy < 0.01)
-        break; % if decreases in entropy are small
+    if (minEntropy < tempEntropy)
+        s = s / 2;
+
+        fprintf('Reducing step size to %d\n', s);
+
+        if (s < 0.001)
+          fprintf('s is below threshold so breaking');
+          break; % if decreases in entropy are small
+        end
     else
+        if (minEntropy - tempEntropy < 0.001) 
+          fprintf('%d - %d = %d < 0.001\n', minEntropy, tempEntropy, minEntropy - tempEntropy);
+          break; % if decreases in entropy are small
+        end
+
         minIdx = l;
         minEntropy = tempEntropy;
+        l = l + 1;
     end
-
-    s = s / 1;
-    l = l + 1;
   end
   
   % `focusedImage` now contains the 1D representation of the entropy-minimized

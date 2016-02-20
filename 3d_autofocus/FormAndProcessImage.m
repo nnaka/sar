@@ -44,9 +44,9 @@
 % so long as each point has an [X Y Z] coordinate, there can be any number
 % of points in any arrangement that you choose...have fun!
 
-% x0=kron((-20:20:20)',ones(3,1));     
-% y0=kron(ones(3,1),(-20:20:20)');
-% z0=[0;30;-30;30;0;-30;30;-30;0];
+x0=kron((-20:20:20)',ones(3,1));     
+y0=kron(ones(3,1),(-20:20:20)');
+z0=[0;30;-30;30;0;-30;30;-30;0];
 
 % x0 = 0;
 % y0 = 0;
@@ -56,9 +56,9 @@
 % y0 = zeros(numel(x0),1);
 % z0 = y0;
 
-x0 = [-10,0,10];
-y0 = [-10,0,10];
-z0 = [-10,0,10];
+% x0 = [-10,0,10];
+% y0 = [-10,0,10];
+% z0 = [-10,0,10];
 
 %x0 = [-30,-30,-30,-30,-30,-20,-10,-10,-10,-10,-10,10,20,30,20,20,20,10,20,30];
 %y0 = [10,5,0,-5,-10,0,10,5,0,-5,-10,10,10,10,5,0,-5,-10,-10,-10];
@@ -99,8 +99,8 @@ load('imageSet50by50_9pts_no_noise');
 % if the given data set is 3D, the image will not be autofocused
 if numel(size(imageSet)) == 4                 
     num_iter = 1;           % number of iterations to run autofocus
-    % [focusedImage, minEntropy] = minEntropyAutoFocus(imageSet, num_iter);
     tic
+    % [focusedImage, minEntropy] = minEntropyAutoFocus(imageSet, num_iter);
     [focusedImage, minEntropy] = minEntropyFminunc(imageSet, num_iter);
     toc
     % focusedImage = imageSet;
