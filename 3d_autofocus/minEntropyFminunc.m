@@ -18,7 +18,7 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   phi_offsets = zeros(MAX_ITER, K);
 
   % Step size parameter for gradient descent
-  s = 10;
+  s = 100;
   
   % As iterating over a 4D array reduces spatial locality, convert `B` once
   % into a 1D array and then convert back after minimization of phi is
