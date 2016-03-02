@@ -94,7 +94,7 @@ double H(const vector<double> P, const double *Br, const double *Bi,
         entropy += z_intensity * log(z_intensity);
     }
 
-    delete Z_mag;
+    delete[] Z_mag;
     return - entropy;
 }
 

@@ -13,8 +13,8 @@ double drand() {
 }
 
 int main() {
-    const size_t K     = 900;
-    const size_t B_len = K * 50 * 50 * 50;
+    const size_t K     = 400;
+    const size_t B_len = K * 20 * 20 * 20;
 
     double *pr = new double[K];
     double *pi = new double[K];
