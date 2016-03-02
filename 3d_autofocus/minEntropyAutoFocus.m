@@ -104,7 +104,7 @@ end
 
 % % save the final pulse set
 % save('focusedImageFinal.mat', 'scan_iter');
-focused_image = scan_iter;
+focused_image = sum(scan_iter, 4);
 
 end
  
