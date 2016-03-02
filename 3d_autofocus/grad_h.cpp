@@ -1,10 +1,16 @@
 #include "grad_h.h"
 
+#if MATLAB_MEX_FILE
 #include "mex.h"
+#define PRINTF mexPrintf
+#else
+#define PRINTF printf
+#endif
 
 #include <cmath>
 #include <vector>
 #include <thread>
+#include <assert.h>
 
 using namespace std;
 
@@ -17,10 +23,10 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 {
     vector<double> P(phi_offsets, phi_offsets + K);
 
-    mexPrintf("In gradH, about to compute Z\n");
-    mexPrintf("Computed Z\n");
+    PRINTF("In gradH, about to compute Z\n");
+    PRINTF("Computed Z\n");
     double H_not = H(P, Br, Bi, K, B_len);
-    mexPrintf("Computed H_not\n");
+    PRINTF("Computed H_not\n");
 
     auto Pr_k(P.begin());
     while (Pr_k != P.end()) {
@@ -54,14 +60,14 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     size_t N = B_len / K;
     double Ez = 0, entropy = 0;
 
-    // mxAssert(B_len % K == 0, "length(B) should always be a multiple of K");
+    assert(B_len % K == 0); // length(B) should always be a multiple of K
 
     double *Z_mag = new double[N];
 
     // ------------------------------------------------------------------------
     // Form Z_mag
     // ------------------------------------------------------------------------
-    double z_r, z_i, a, b, c, d, e;
+    double z_r, z_i, a, b, c, d;
     for (size_t n = 0; n < N; ++n) {
         z_r = 0; z_i = 0;
 
