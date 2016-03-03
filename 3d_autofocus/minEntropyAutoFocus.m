@@ -1,4 +1,4 @@
-function [ focused_image, minEntropy ] = minEntropyAutoFocus( pulseSet, numIterations )
+function [ focused_image, minEntropy, maxEntropy ] = minEntropyAutoFocus( pulseSet, numIterations )
 
 % Minimum Entropy Auto Focus
 %
@@ -54,6 +54,7 @@ scan_iter = scanSet;
 phi_offsets = zeros(1,size(scanSet, 4));    % Current phase offsets for each pulse    
 phiset = linspace(-1*pi,1*pi, 100);         % All possible phase offsets
 
+maxEntropy = findEntropy(sum(pulseSet, 4));
 
 % perform the coordinate descent iterations
 allEntropies = zeros(1, numPulses*numIterations);
@@ -86,24 +87,9 @@ for iter = 1:numIterations
         
         scan_iter(:,:,:,pulseIdx) = scanSet(:,:,:,pulseIdx) * exp(1j*phi_offsets(pulseIdx));
         allEntropies(pulseIdx + (iter-1)*numIterations) = findEntropy(sum(scan_iter,4));
-        
-        % fprintf('Entropy: %f\n', allEntropies(pulseIdx + (iter-1)*numIterations));
-        
     end 
-
-    % save an image for each iteration 
-    % img_iter = sum(scan_iter,4);
-    % if iter == numIterations
-    %     filename = sprintf('finalImage');
-    % else 
-    %     filename = sprintf('focusedImageIter_%d', iter);
-    % end
-    % save(filename, 'img_iter');
-
 end
 
-% % save the final pulse set
-% save('focusedImageFinal.mat', 'scan_iter');
 focused_image = sum(scan_iter, 4);
 
 end

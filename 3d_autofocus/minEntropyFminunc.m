@@ -4,12 +4,13 @@
 %
 % B is a 4D array of b_k values
 % L is the number of iterations
-function [ out, minEntropy ] = minEntropyFminunc( B, L )
+function [ out, minEntropy, maxEntropy ] = minEntropyFminunc( B, L )
+  THRESHOLD = 0.05;
   MAX_ITER = 50;
   X = size(B,1); Y = size(B,2); Z = size(B,3); K = size(B,4);
   l = 2;
   minIdx = 1;
-  minEntropy = 100;
+  minEntropy = Inf;
 
   % Holds array of potentially minimizing phase offsets - 100 is an arbitrary
   % maximum number of iterations
@@ -35,6 +36,9 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   
   B = B_tmp;
   clear('B_tmp');
+
+  maxEntropy = H(image(zeros(K), B));
+
   while (1) % phi_offsets(1) = 0
     phi_offsets(l, :) = phi_offsets(l - 1, :) - s * grad_h_mex(phi_offsets(l - 1, :), B);
     focusedImage = image(phi_offsets(l, :), B);
@@ -47,12 +51,12 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
 
         fprintf('Reducing step size to %d\n', s);
 
-        if (s < 0.001)
+        if (s < THRESHOLD)
           fprintf('s is below threshold so breaking');
-          break; % if decreases in entropy are small
+          break;
         end
     else
-        if (minEntropy - tempEntropy < 0.001) 
+        if (minEntropy - tempEntropy < THRESHOLD) 
           fprintf('%d - %d = %d < 0.001\n', minEntropy, tempEntropy, minEntropy - tempEntropy);
           break; % if decreases in entropy are small
         end

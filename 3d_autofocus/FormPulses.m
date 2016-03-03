@@ -1,4 +1,4 @@
-function [yOut] = FormPulses(x0, y0, z0, nX, nY, addNoise)
+function [yOut] = FormPulses(x0, y0, z0, nX, nY, noiseFactorVec)
 
 % ----------------------------------------------------------------------- %
 % Form Pulses
@@ -9,12 +9,10 @@ function [yOut] = FormPulses(x0, y0, z0, nX, nY, addNoise)
 % additionally saves the data to RawImageData.mat.
 %
 % Inputs:
-%   x0, y0, z0 - [ X Y Z ] coordinates of each radar target
-%   nX         - number of pulses per row of the aperture
-%   nY         - number of rows in the aperture
-%   addNoise   - boolean; if true will add random noise in the aperture
-%                locations. This noise is typical of the Piksi RTK GPS
-%                unit.
+%   x0, y0, z0     - [ X Y Z ] coordinates of each radar target
+%   nX             - number of pulses per row of the aperture
+%   nY             - number of rows in the aperture
+%   noiseFactorVec - noise multiplier [x,y,z] -- default noise: 10 mm
 %
 % ----------------------------------------------------------------------- %
 
@@ -42,34 +40,38 @@ for n = 1:nY
     y=yCent*ones(size(x));
     z=zCent+zStep*(n-(nY-1)/2)*ones(size(x));
      
-    if addNoise                 % noise is a normal curve in each dimension
-                                % and is based on the expected error from 
-       sigmaY = 0.0051;         % the RTK GPS unit
-       sigmaZ = 0.0071;
-       meanY  = -0.009;
-       meanZ  = -0.0083;
-       meanX  = 0;              % Further testing needs to be completed to
-       sigmaX = 0.0051;         % determine the meanX and sigmaX...
-                                % X position is a function of time;
-                                % GPS data needs to be correlated with
-                                % video frames
-                                % sigmaX assumed to be equal to sigmaY
-                                % because SwiftNav claims error
-                                % distributions are equal in the xy plane
-       
-       % Add random noise into the aperture positions;
-       % Noise was experimentally found to be a normal distrubution curve
-       randVec = normrnd(meanZ,sigmaZ,1,length(z));
-       z = z + randVec;
-       randVec = normrnd(meanY,sigmaY,1,length(y));
-       y = y + randVec;
-       randVec = normrnd(meanX,sigmaX,1,length(x));
-       x = x + randVec;
-    end
+    % noise is a normal curve in each dimension and is based on the expected
+    % error from the RTK GPS unit
+
+    % GPS AVERAGES
+
+    meanX  = 0;             
+    meanY  = -0.009;
+    meanZ  = -0.0083;
+
+    sigmaX = 0.0051;        
+    sigmaY = 0.0051;         
+    sigmaZ = 0.0071;
+
+    % Further testing needs to be completed to determine the meanX and sigmaX...
+    % X position is a function of time; GPS data needs to be correlated with
+    % video frames sigmaX assumed to be equal to sigmaY because SwiftNav claims
+    % error distributions are equal in the xy plane
+
+    % Add random noise into the aperture positions;
+    % Noise was experimentally found to be a normal distrubution curve
+
+    randVec = normrnd(meanX,sigmaX,1,length(x));
+    x = x + randVec * noiseFactorVec(1);
+
+    randVec = normrnd(meanY,sigmaY,1,length(y));
+    y = y + randVec * noiseFactorVec(2);
+
+    randVec = normrnd(meanZ,sigmaZ,1,length(z));
+    z = z + randVec * noiseFactorVec(3);
     
     % Create the current row of pulses  
     yOut(:,:,n) = makePulsOn(x0,y0,z0,x,y,z,tauP,fs,fc,c,n,nY);
-    
 end 
 end  % FormPulses
 
