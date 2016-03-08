@@ -10,18 +10,23 @@
 
 using namespace std;
 
+const auto C = 299792458; // speed of light
+
 // NOTE: Most memory leaks marked below result from not calling
 // `mrmSampleExit()` So `mrmIfClose()` is never called, and so the socket is
 // forcibly released by the OS which can cause 'bind: Socket already in use'
 // errors.
 
 PulsOn::PulsOn(const string & radioAddr) :
-	userBaseII(DEFAULT_BASEII),
     userScanStart(DEFAULT_SCAN_START),
-    userScanStop(DEFAULT_SCAN_STOP),
+    userScanStop(userScanStart + (2 * DEFAULT_MAX_DISTANCE / C) * 1e12),
+	userBaseII(DEFAULT_BASEII),
+    userTxGain(DEFAULT_TX_GAIN),
+    userCodeChannel(DEFAULT_CODE_CHANNEL),
+    userAntennaMode(DEFAULT_ANTENNA_MODE),
+    userScanResolutionBins(DEFAULT_SCAN_RESOLUTION_BINS),
     userScanCount(DEFAULT_SCAN_COUNT),
-    userScanInterval(DEFAULT_SCAN_INTERVAL),
-    userTxGain(DEFAULT_TX_GAIN)
+    userScanInterval(DEFAULT_SCAN_INTERVAL)
 {
     int mode;
 
@@ -69,10 +74,13 @@ PulsOn::PulsOn(const string & radioAddr) :
             "Time out waiting for config confirm");
 
 	// modify config with user inputs
-	config.baseIntegrationIndex = userBaseII;
 	config.scanStartPs          = userScanStart;
 	config.scanEndPs            = userScanStop;
+	config.baseIntegrationIndex = userBaseII;
 	config.txGain               = userTxGain;
+    config.codeChannel          = userCodeChannel;
+	config.antennaMode          = userAntennaMode;
+	config.scanResolutionBins   = userScanResolutionBins;
 
     // TODO: (joshpfosi) Memory leak (see top of file)
 	// write updated config to radio
