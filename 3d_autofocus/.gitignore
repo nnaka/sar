@@ -1,5 +1,5 @@
 RawRadarData.mat
-imageCube.mat
+imageCube*
 *.o
 *.mexmaci64
 *.dSYM

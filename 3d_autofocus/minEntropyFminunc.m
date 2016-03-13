@@ -4,12 +4,13 @@
 %
 % B is a 4D array of b_k values
 % L is the number of iterations
-function [ out, minEntropy ] = minEntropyFminunc( B, L )
-  MAX_ITER = 100;
+function [ out, minEntropy, maxEntropy ] = minEntropyFminunc( B, L )
+  THRESHOLD = 0.05;
+  MAX_ITER = 50;
   X = size(B,1); Y = size(B,2); Z = size(B,3); K = size(B,4);
   l = 2;
   minIdx = 1;
-  minEntropy = 100;
+  minEntropy = Inf;
 
   % Holds array of potentially minimizing phase offsets - 100 is an arbitrary
   % maximum number of iterations
@@ -18,7 +19,7 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   phi_offsets = zeros(MAX_ITER, K);
 
   % Step size parameter for gradient descent
-  s = 10;
+  s = 100;
   
   % As iterating over a 4D array reduces spatial locality, convert `B` once
   % into a 1D array and then convert back after minimization of phi is
@@ -34,6 +35,10 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
   end
   
   B = B_tmp;
+  clear('B_tmp');
+
+  maxEntropy = H(image(phi_offsets(1, :), B));
+
   while (1) % phi_offsets(1) = 0
     phi_offsets(l, :) = phi_offsets(l - 1, :) - s * gradH(phi_offsets(l - 1, :), B);
     focusedImage = image(phi_offsets(l, :), B);
@@ -41,15 +46,25 @@ function [ out, minEntropy ] = minEntropyFminunc( B, L )
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
 
-    if (minEntropy - tempEntropy < 0.01)
-        break; % if decreases in entropy are small
+    if (minEntropy < tempEntropy)
+        s = s / 2;
+
+        fprintf('Reducing step size to %d\n', s);
+
+        if (s < THRESHOLD)
+          fprintf('s is below threshold so breaking');
+          break;
+        end
     else
+        if (minEntropy - tempEntropy < THRESHOLD) 
+          fprintf('%d - %d = %d < 0.001\n', minEntropy, tempEntropy, minEntropy - tempEntropy);
+          break; % if decreases in entropy are small
+        end
+
         minIdx = l;
         minEntropy = tempEntropy;
+        l = l + 1;
     end
-
-    s = s / 1;
-    l = l + 1;
   end
   
   % `focusedImage` now contains the 1D representation of the entropy-minimized
