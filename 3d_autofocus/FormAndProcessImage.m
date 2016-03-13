@@ -67,16 +67,16 @@ z0 = 10;
 % Other image parameters
 nX = 35;                       % # of points per row in synthetic aperture
 nY = 35;                       % # of rows in synthetic aperture
-noiseVec = [0,0,0];            % nonzero values will inject noise
+noiseVec = [0,0,0];          % nonzero values will inject noise
 
 %% Generate SAR data with the given points 
-PulseData = FormPulses(x0, y0, z0, nX, nY, noiseVec);
+% PulseData = FormPulses(x0, y0, z0, nX, nY, noiseVec);
 
 % For testing purposes, we do not generate new data each run, and instead
 % load formatted data from a file.
 
 %% Format the raw radar data to mesh with 2014-2015 Senior Design code
-formedData = FormatPulseData(PulseData);
+% formedData = FormatPulseData(PulseData);
 
 % For testing purposes, we load imageSet strictly from a file so it is
 % consistent
@@ -84,17 +84,18 @@ formedData = FormatPulseData(PulseData);
 
 %% Process formed data to create an image
 imgSize = [50 50 50];        % voxels [ X Y Z ]
-sceneSize = [100 100 100];      % meters [ X Y Z ] 
-form_pulse_set = true;         % set to true if image is to be autofocused
-imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
+sceneSize = [100 100 100];   % meters [ X Y Z ] 
+form_pulse_set = true;       % set to true if image is to be autofocused
+% imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
 
 % For testing purposes, we load imageSet strictly from a file so it is
 % consistent.
 
-% load('/data/imageSet35by35_9pts_no_noise');
-% save('/data/imageSet35by35_9pts_no_noise', 'imageSet', '-v7.3')
+load('/data/highNoiseOriginal');
+% save('/data/highNoiseOriginal', 'imageSet', '-v7.3')
 
-unfocusedImage = sum(imageSet, 4);
+% unfocusedImage = sum(imageSet, 4);
+% save('/data/imageCube35by35_9pts_noise(0,0,0)_UNFOCUSED.mat', 'unfocusedImage', '-v7.3')
 
 %% Perform minimum entropy Autofocus 
 
@@ -105,17 +106,15 @@ if numel(size(imageSet)) == 4
     tic
     [focusedImageBrute, minEntropyBrute, maxEntropyBrute] = minEntropyAutoFocus(imageSet, num_iter);
     et1 = toc;
+    save('/data/highNoiseOriginal_BRUTE.mat', 'focusedImageBrute', '-v7.3')
 
     tic
     [focusedImage, minEntropy, maxEntropy] = minEntropyFminunc(imageSet, num_iter);
     et2 = toc;
+    save('/data/highNoiseOriginal.mat', 'focusedImage', '-v7.3')
 else 
     focusedImage = imageSet;
 end 
 
 fprintf('Min Entropy (Brute Force): %f, Max Entropy (Brute Force): %f, Elapsed Time: %f\n', minEntropyBrute, maxEntropyBrute, et1);
-fprintf('Min Entropy: %f, Max Entropy: %f, Elapsed Time: %f\n', minEntropy, maxEntropy et2);
-
-save('/data/imageCube35by35_9pts_no_noise_UNFOCUSED.mat', 'unfocusedImage', '-v7.3')
-save('/data/imageCube35by35_9pts_no_noise_BRUTE.mat', 'focusedImageBrute', '-v7.3')
-save('/data/imageCube35by35_9pts_no_noise.mat', 'focusedImage', '-v7.3')
+fprintf('Min Entropy: %f, Max Entropy: %f, Elapsed Time: %f\n', minEntropy, maxEntropy, et2);
