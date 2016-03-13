@@ -1,17 +1,13 @@
 % ----------------------------------------------------------------------- %
-% Form and Process Image
+% Form Image
 % 
+% Forms an image using the parameters set below and saves it to the specified
+% filename
+%
 % 1 - Generates a set of radar point reflectors 
 % 2 - Forms pulsed radar data from these points
 % 3 - Processes the radar data to form a 3D image
-% 4 - Autofocus the image if the pulse set has the proper number of
-%     dimensions* 
-% 5 - View and save the image
 %
-%
-% *Autofocus requires a 4D matrix: the 1D for each pulse and 3D for each
-%  corresponding image. SAR 3D will output a 4D matrix if specified with 
-%  the boolean form_pulse_set. 
 % Current Limitations:
 %   If you are trying to create a pulseSet to run with autofocus with an
 %   aperture size greater than 40x40 pulses and image size greater than
@@ -24,19 +20,14 @@
 %   memory problem will grow exponentially as we increase aperture sizes to
 %   our operational goal of 30x5m with ~110,000 pulses. 
 %
-%   Several options going forward: 
-%       1 - Redesign autofocus to work with 3D data sets. 
-%       2 - Partition the 4D pulse sets into numerous smaller ones. This
-%           way data is saved incrimentally and is not all stored at once.
-%           It can be incrimentally recombined as needed in the autofocus
-%           routine. 
-%       3 - Build a computational beast with limitless RAM.
-%
 % Also of note:
 %   With current numbers for GPS error (std X, Y = 0.0051m; Z = 0.0071m)
 %   GPS error is unnoticable in images created from apertures upwards of
 %   100x100 pulses, and barely noticable in apertures around 40x40 pulses. 
 % ----------------------------------------------------------------------- %
+
+% @param filename [string] e.g. '/data/imageSet50by50_9pts_noise(0,0,0)'
+function [] = FormImage( filename )
 
 %% Generate target points 
 % these vectors define the locations of the set of point source scatterers 
@@ -70,13 +61,13 @@ nY = 35;                       % # of rows in synthetic aperture
 noiseVec = [0,0,0];          % nonzero values will inject noise
 
 %% Generate SAR data with the given points 
-% PulseData = FormPulses(x0, y0, z0, nX, nY, noiseVec);
+PulseData = FormPulses(x0, y0, z0, nX, nY, noiseVec);
 
 % For testing purposes, we do not generate new data each run, and instead
 % load formatted data from a file.
 
 %% Format the raw radar data to mesh with 2014-2015 Senior Design code
-% formedData = FormatPulseData(PulseData);
+formedData = FormatPulseData(PulseData);
 
 % For testing purposes, we load imageSet strictly from a file so it is
 % consistent
@@ -85,36 +76,11 @@ noiseVec = [0,0,0];          % nonzero values will inject noise
 %% Process formed data to create an image
 imgSize = [50 50 50];        % voxels [ X Y Z ]
 sceneSize = [100 100 100];   % meters [ X Y Z ] 
-form_pulse_set = true;       % set to true if image is to be autofocused
-% imageSet = SAR_3D(formedData, imgSize, sceneSize, form_pulse_set);
+imageSet = SAR_3D(formedData, imgSize, sceneSize, true);
 
 % For testing purposes, we load imageSet strictly from a file so it is
 % consistent.
 
-load('/data/highNoiseOriginal');
-% save('/data/highNoiseOriginal', 'imageSet', '-v7.3')
+save(filename, 'imageSet', '-v7.3')
 
-% unfocusedImage = sum(imageSet, 4);
-% save('/data/imageCube35by35_9pts_noise(0,0,0)_UNFOCUSED.mat', 'unfocusedImage', '-v7.3')
-
-%% Perform minimum entropy Autofocus 
-
-% The autofocus algorithm will only run with a 4D data set 
-% if the given data set is 3D, the image will not be autofocused
-if numel(size(imageSet)) == 4                 
-    num_iter = 1;           % number of iterations to run autofocus
-    tic
-    [focusedImageBrute, minEntropyBrute, maxEntropyBrute] = minEntropyAutoFocus(imageSet, num_iter);
-    et1 = toc;
-    save('/data/highNoiseOriginal_BRUTE.mat', 'focusedImageBrute', '-v7.3')
-
-    tic
-    [focusedImage, minEntropy, maxEntropy] = minEntropyGradientC(imageSet, num_iter);
-    et2 = toc;
-    save('/data/highNoiseOriginal.mat', 'focusedImage', '-v7.3')
-else 
-    focusedImage = imageSet;
-end 
-
-fprintf('Min Entropy (Brute Force): %f, Max Entropy (Brute Force): %f, Elapsed Time: %f\n', minEntropyBrute, maxEntropyBrute, et1);
-fprintf('Min Entropy: %f, Max Entropy: %f, Elapsed Time: %f\n', minEntropy, maxEntropy, et2);
+end

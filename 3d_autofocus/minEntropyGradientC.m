@@ -1,11 +1,11 @@
-% The following is a MATLAB implementation of the standard gradient descent
-% minimization of the image entropy cost function. The below algorithm
+% The following is a MATLAB / C++ implementation of the standard gradient
+% descent minimization of the image entropy cost function. The below algorithm
 % implements the technique described analytically in 'tech_report.pdf'.
 %
 % B is a 4D array of b_k values
 % L is the number of iterations
 function [ out, minEntropy, maxEntropy ] = minEntropyGradientC( B, L )
-  THRESHOLD = 0.05;
+  THRESHOLD = 0.01;
   MAX_ITER = 50;
   X = size(B,1); Y = size(B,2); Z = size(B,3); K = size(B,4);
   l = 2;

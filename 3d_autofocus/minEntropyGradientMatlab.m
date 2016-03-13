@@ -4,8 +4,8 @@
 %
 % B is a 4D array of b_k values
 % L is the number of iterations
-function [ out, minEntropy, maxEntropy ] = minEntropyFminunc( B, L )
-  THRESHOLD = 0.05;
+function [ out, minEntropy, maxEntropy ] = minEntropyGradientMatlab( B, L )
+  THRESHOLD = 0.01;
   MAX_ITER = 50;
   X = size(B,1); Y = size(B,2); Z = size(B,3); K = size(B,4);
   l = 2;
