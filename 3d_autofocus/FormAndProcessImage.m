@@ -109,7 +109,7 @@ if numel(size(imageSet)) == 4
     save('/data/highNoiseOriginal_BRUTE.mat', 'focusedImageBrute', '-v7.3')
 
     tic
-    [focusedImage, minEntropy, maxEntropy] = minEntropyFminunc(imageSet, num_iter);
+    [focusedImage, minEntropy, maxEntropy] = minEntropyGradientC(imageSet, num_iter);
     et2 = toc;
     save('/data/highNoiseOriginal.mat', 'focusedImage', '-v7.3')
 else 
