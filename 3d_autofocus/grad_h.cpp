@@ -1,9 +1,11 @@
 #include "grad_h.h"
 
+
 #if MATLAB_MEX_FILE
 #include "mex.h"
 #define PRINTF mexPrintf
 #else
+#include <stdio.h>
 #define PRINTF printf
 #endif
 

@@ -5,3 +5,5 @@ imageCube*
 grad_h_driver
 callgrind*
 data
+*.log
+grad_h_driver_cuda

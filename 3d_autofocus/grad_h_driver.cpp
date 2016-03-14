@@ -13,8 +13,8 @@ double drand() {
 }
 
 int main() {
-    const size_t K     = 400;
-    const size_t B_len = K * 20 * 20 * 20;
+    const size_t K     = 100;
+    const size_t B_len = K * 10 * 10 * 10;
 
     double *pr = new double[K];
     double *pi = new double[K];
@@ -23,7 +23,7 @@ int main() {
 
     double *grad = new double[K];
 
-    srand(time(0));
+    srand(7);
 
     for (size_t k = 0; k < K; ++k) {
         pr[k] = drand();
@@ -38,6 +38,10 @@ int main() {
     for (int i = 0; i < 1; ++i) {
         printf("Iteration %d\n", i);
         gradH(pi, Br, Bi, grad, K, B_len);
+
+        for (size_t i(0); i < K; ++i) {
+            printf("grad[%lu]=%f\n", i, grad[i]);
+        }
     }
 
     free(pr);
