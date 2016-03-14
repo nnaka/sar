@@ -23,18 +23,19 @@ __global__ void reduce0(double *P, double *z, double *Br, double *Bi, int K, boo
 
   // each thread loads one element from global to shared mem
   unsigned int tid = threadIdx.x;
+  unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (is_z_r) {
-    p_r[tid] = Br[tid] * cos(P[tid]) + Bi[tid] * sin(P[tid]);
+    p_r[tid] = Br[i] * cos(P[i]) + Bi[i] * sin(P[i]);
   }
   else {
-    p_r[tid] = Bi[tid] * cos(P[tid]) - Br[tid] * sin(P[tid]);
+    p_r[tid] = Bi[i] * cos(P[i]) - Br[i] * sin(P[i]);
   }
 
   __syncthreads();
 
   // do reduction in shared mem
-  for(unsigned int s=1; s < blockDim.x; s *= 2) {
+  for(unsigned int s = 1; s < blockDim.x; s *= 2) {
     if (tid % (2*s) == 0) {
       p_r[tid] += p_r[tid + s];
     }
@@ -44,7 +45,7 @@ __global__ void reduce0(double *P, double *z, double *Br, double *Bi, int K, boo
 
   // write result for this block to global mem
   if (tid == 0) {
-    z[0] = p_r[0];
+    z[blockIdx.x] = p_r[0];
   }
 }
 
@@ -96,8 +97,11 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     // ------------------------------------------------------------------------
     // Form Z_mag
     // ------------------------------------------------------------------------
-    double *z_r = (double *)malloc(sizeof(double));
-    double *z_i = (double *)malloc(sizeof(double));//, a, b, c, d;
+    const int bs = 4; // NOTE: Must be a multiple of K
+    const int nT = K / bs;
+
+    double *z_r = (double *)malloc(bs * sizeof(double));
+    double *z_i = (double *)malloc(bs * sizeof(double));
 
     double *d_P, *d_Br, *d_Bi;
     double *d_z_r = NULL, *d_z_i = NULL;
@@ -106,19 +110,22 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     funcCheck(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Bi, B_len * sizeof(double)));
 
-    funcCheck(cudaMalloc((void **)&d_z_r, sizeof(double)));
-    funcCheck(cudaMalloc((void **)&d_z_i, sizeof(double)));
+    funcCheck(cudaMalloc((void **)&d_z_r, bs * sizeof(double)));
+    funcCheck(cudaMalloc((void **)&d_z_i, bs * sizeof(double)));
 
-    cudaMemcpy(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_Br, Br, B_len * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_Bi, Bi, B_len * sizeof(double), cudaMemcpyHostToDevice);
+    funcCheck(cudaMemcpy(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice));
+    funcCheck(cudaMemcpy(d_Br, Br, B_len * sizeof(double), cudaMemcpyHostToDevice));
+    funcCheck(cudaMemcpy(d_Bi, Bi, B_len * sizeof(double), cudaMemcpyHostToDevice));
 
     for (size_t n = 0; n < N; ++n) {
-      reduce0<<<1, K, K * sizeof(double)>>>(d_P, d_z_r, d_Br + n * K, d_Bi + n * K, K, true);
-      reduce0<<<1, K, K * sizeof(double)>>>(d_P, d_z_i, d_Br + n * K, d_Bi + n * K, K, false);
+      reduce0<<<bs, nT, nT * sizeof(double)>>>(d_P, d_z_r, d_Br + n * K, d_Bi + n * K, K, true);
+      reduce0<<<bs, nT, nT * sizeof(double)>>>(d_P, d_z_i, d_Br + n * K, d_Bi + n * K, K, false);
 
-      cudaMemcpy(z_r, d_z_r, sizeof(double), cudaMemcpyDeviceToHost);
-      cudaMemcpy(z_i, d_z_i, sizeof(double), cudaMemcpyDeviceToHost);
+      funcCheck(cudaMemcpy(z_r, d_z_r, bs * sizeof(double), cudaMemcpyDeviceToHost));
+      funcCheck(cudaMemcpy(z_i, d_z_i, bs * sizeof(double), cudaMemcpyDeviceToHost));
+
+      for (size_t b(1); b < bs; ++b) { z_r[0] += z_r[b]; }
+      for (size_t b(1); b < bs; ++b) { z_i[0] += z_i[b]; }
 
       Z_mag[n] = *z_r * *z_r + *z_i * *z_i;
     }
@@ -127,12 +134,12 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     // magnitude of // the pixels in Z_mag
     for (size_t n = 0; n < N; ++n) { Ez += Z_mag[n]; }
 
-    cudaFree(d_P);
-    cudaFree(d_Br);
-    cudaFree(d_Bi);
+    funcCheck(cudaFree(d_P));
+    funcCheck(cudaFree(d_Br));
+    funcCheck(cudaFree(d_Bi));
 
-    cudaFree(d_z_r);
-    cudaFree(d_z_i);
+    funcCheck(cudaFree(d_z_r));
+    funcCheck(cudaFree(d_z_i));
 
     free(z_r);
     free(z_i);
