@@ -35,29 +35,93 @@ __global__ void reduce1(double *Z_mag, double *z_r, double *z_i, size_t N)
   }
 }
 
-__global__ void sum(double *in, double *out) {
-  extern __shared__ double sdata[];
-
-  // each thread loads one element from global to shared mem
-  unsigned int tid = threadIdx.x;
-  unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  sdata[tid] = in[i];
-  __syncthreads();
-
-  // do reduction in shared mem
-  for(unsigned int s = 1; s < blockDim.x; s *= 2) {
-    if (tid % (2*s) == 0) {
-      sdata[tid] += sdata[tid + s];
+template<class T>
+struct SharedMemory
+{
+    __device__ inline operator       T *()
+    {
+        extern __shared__ int __smem[];
+        return (T *)__smem;
     }
 
-    __syncthreads();
-  }
+    __device__ inline operator const T *() const
+    {
+        extern __shared__ int __smem[];
+        return (T *)__smem;
+    }
+};
+template<>
+struct SharedMemory<double>
+{
+    __device__ inline operator       double *()
+    {
+        extern __shared__ double __smem_d[];
+        return (double *)__smem_d;
+    }
 
-  // write result for this block to global mem
-  if (tid == 0) {
-    out[blockIdx.x] = sdata[0];
-  }
+    __device__ inline operator const double *() const
+    {
+        extern __shared__ double __smem_d[];
+        return (double *)__smem_d;
+    }
+};
+
+template <class T>
+__global__ void sum(T *g_idata, T *g_odata, unsigned int n)
+{
+    T *sdata = SharedMemory<T>();
+
+    // load shared mem
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+
+    sdata[tid] = (i < n) ? g_idata[i] : 0;
+
+    __syncthreads();
+
+    // do reduction in shared mem
+    for (unsigned int s=1; s < blockDim.x; s *= 2)
+    {
+        // modulo arithmetic is slow!
+        if ((tid % (2*s)) == 0)
+        {
+            sdata[tid] += sdata[tid + s];
+        }
+
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+}
+
+template <class T>
+__global__ void reduce2(T *g_idata, T *g_odata, double Ez, unsigned int n)
+{
+    T *sdata = SharedMemory<T>();
+
+    // load shared mem
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+
+    sdata[tid] = (i < n) ? (g_idata[i] / Ez) * log(g_idata[i] / Ez) : 0;
+
+    __syncthreads();
+
+    // do reduction in shared mem
+    for (unsigned int s=1; s < blockDim.x; s *= 2)
+    {
+        // modulo arithmetic is slow!
+        if ((tid % (2*s)) == 0)
+        {
+            sdata[tid] += sdata[tid + s];
+        }
+
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 }
 
 // TODO: Nice doc comments
@@ -103,19 +167,23 @@ double H(const vector<double> P, const double *Br, const double *Bi,
 
     assert(B_len % K == 0); // length(B) should always be a multiple of K
 
-    double *Z_mag = new double[N];
-
     // ------------------------------------------------------------------------
     // Form Z_mag
     // ------------------------------------------------------------------------
-    double *z_r = new double[N], *z_i = new double[N];
-    memset(z_r, 0.0, sizeof(double) * N); memset(z_i, 0.0, sizeof(double) * N);
+    double *Z_mag    = NULL;
+    double *z_r      = NULL;
+    double *z_i      = NULL;
+    double *Br_shift = NULL;
+    double *Bi_shift = NULL;
 
-    double *Br_shift = new double[B_len], *Bi_shift = new double[B_len];
-    memset(Br_shift, 0.0, sizeof(double) * B_len); memset(Bi_shift, 0.0, sizeof(double) * B_len);
+    funcCheck(cudaMallocHost((void **)&Z_mag, N * sizeof(double)));
+    funcCheck(cudaMallocHost((void **)&z_r, N * sizeof(double)));
+    funcCheck(cudaMallocHost((void **)&z_i, N * sizeof(double)));
+    funcCheck(cudaMallocHost((void **)&Br_shift, B_len * sizeof(double)));
+    funcCheck(cudaMallocHost((void **)&Bi_shift, B_len * sizeof(double)));
 
     const int nT = 1024;
-    const int bs = (B_len + nT - 1) / nT; // cheap ceil()
+    int bs = (B_len + nT - 1) / nT; // cheap ceil()
 
     double *d_P, *d_Br, *d_Bi;
     double *d_Br_shift = NULL, *d_Bi_shift = NULL;
@@ -133,20 +201,17 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     funcCheck(cudaMalloc((void **)&d_z_i, N * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
 
-    funcCheck(cudaMemset(d_Br_shift, 0, B_len * sizeof(double)));
-    funcCheck(cudaMemset(d_Bi_shift, 0, B_len * sizeof(double)));
-
-    funcCheck(cudaMemset(d_Z_mag, 0, N * sizeof(double)));
-
     funcCheck(cudaMemcpy(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice));
+
     funcCheck(cudaMemcpy(d_Br, Br, B_len * sizeof(double), cudaMemcpyHostToDevice));
     funcCheck(cudaMemcpy(d_Bi, Bi, B_len * sizeof(double), cudaMemcpyHostToDevice));
 
-    reduce0<<<bs, nT>>>(d_P, d_Br_shift, d_Bi_shift, d_Br, d_Bi, K, B_len);
+    reduce0<<<bs, nT, 0>>>(d_P, d_Br_shift, d_Bi_shift, d_Br, d_Bi, K, B_len);
 
     funcCheck(cudaMemcpy(Br_shift, d_Br_shift, B_len * sizeof(double), cudaMemcpyDeviceToHost));
     funcCheck(cudaMemcpy(Bi_shift, d_Bi_shift, B_len * sizeof(double), cudaMemcpyDeviceToHost));
 
+    // TODO: Explore reduction kernel
     for (size_t n = 0; n < B_len; ++n) {
       z_r[n / K] += Br_shift[n];
       z_i[n / K] += Bi_shift[n];
@@ -157,11 +222,6 @@ double H(const vector<double> P, const double *Br, const double *Bi,
 
     reduce1<<<bs, nT>>>(d_Z_mag, d_z_r, d_z_i, N);
 
-    funcCheck(cudaMemcpy(Z_mag, d_Z_mag, N * sizeof(double), cudaMemcpyDeviceToHost));
-
-    delete[] z_r; delete[] z_i;
-    delete[] Br_shift; delete[] Bi_shift;
-
     funcCheck(cudaFree(d_P));
     funcCheck(cudaFree(d_Br));
     funcCheck(cudaFree(d_Bi));
@@ -171,19 +231,37 @@ double H(const vector<double> P, const double *Br, const double *Bi,
 
     funcCheck(cudaFree(d_z_r));
     funcCheck(cudaFree(d_z_i));
-    funcCheck(cudaFree(d_Z_mag));
 
     // Returns the total image energy of the complex image Z_mag given the
     // magnitude of // the pixels in Z_mag
-    for (size_t n = 0; n < N; ++n) { Ez += Z_mag[n]; }
+    // TODO: Explore reduction kernel
+    bs = (N + nT - 1) / nT; // cheap ceil()
 
-    double z_intensity(0);
-    for (size_t n = 0; n < N; ++n) {
-        z_intensity = Z_mag[n] / Ez;
-        entropy += z_intensity * log(z_intensity);
-    }
+    double *accum   = NULL;
+    double *d_accum = NULL;
 
-    delete[] Z_mag;
+    funcCheck(cudaMallocHost((void **)&accum, bs * sizeof(double)));
+    funcCheck(cudaMalloc((void **)&d_accum, bs * sizeof(double)));
+
+    sum<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, N);
+    funcCheck(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
+    for (size_t b(0); b < bs; ++b) { Ez += accum[b]; }
+
+
+    reduce2<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, Ez, N);
+    funcCheck(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
+    for (size_t b(0); b < bs; ++b) { entropy += accum[b]; }
+
+    funcCheck(cudaFree(d_Z_mag));
+    funcCheck(cudaFree(d_accum));
+
+    funcCheck(cudaFreeHost(accum));
+    funcCheck(cudaFreeHost(Z_mag));
+    funcCheck(cudaFreeHost(z_r));
+    funcCheck(cudaFreeHost(z_i));
+    funcCheck(cudaFreeHost(Br_shift));
+    funcCheck(cudaFreeHost(Bi_shift));
+
     return - entropy;
 }
 
