@@ -3,6 +3,7 @@
 #include "grad_h.h"
 
 #include <stdio.h>
+#include <string.h> // memset
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
@@ -44,11 +45,11 @@ int main() {
         }
     }
 
-    free(pr);
-    free(pi);
-    free(Br);
-    free(Bi);
-    free(grad);
+    delete[] pr;
+    delete[] pi;
+    delete[] Br;
+    delete[] Bi;
+    delete[] grad;
 
     return 0;
 }
