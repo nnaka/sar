@@ -16,13 +16,46 @@
 
 using namespace std;
 
-__global__ void reduce0(double *P, double *Br_shift, double *Bi_shift, double *Br, double *Bi, size_t K, size_t B_len)
+#define funcCheck(stmt) {                                         \
+  cudaError_t err = stmt;                                         \
+  if (err != cudaSuccess)                                         \
+  {                                                               \
+    printf( "Failed to run stmt %d\n", __LINE__);                 \
+    printf( "Got CUDA error ...  %s\n", cudaGetErrorString(err)); \
+    return -1;                                                    \
+  }                                                               \
+}
+
+__device__ double atomicAdd(double* address, double val)
+{
+  unsigned long long int* address_as_ull = (unsigned long long int*)address;
+  unsigned long long int old = *address_as_ull, assumed;
+
+  do {
+    assumed = old;
+    old = atomicCAS(address_as_ull, assumed, 
+        __double_as_longlong(val + 
+          __longlong_as_double(assumed)));
+  } while (assumed != old);
+
+  return __longlong_as_double(old);
+}
+
+__global__ void reduce0(double *P, double *Br_shift, double *Bi_shift,
+    double *z_r, double *z_i, double *Br, double *Bi, size_t K, size_t B_len)
 {
   unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (n < B_len) {
     Br_shift[n] = Br[n] * cos(P[n % K]) + Bi[n] * sin(P[n % K]);
     Bi_shift[n] = Bi[n] * cos(P[n % K]) - Br[n] * sin(P[n % K]);
+
+    __syncthreads();
+
+    unsigned int k = n / K;
+
+    atomicAdd(z_r + k, Br_shift[n]);
+    atomicAdd(z_i + k, Bi_shift[n]);
   }
 }
 
@@ -50,6 +83,7 @@ struct SharedMemory
         return (T *)__smem;
     }
 };
+
 template<>
 struct SharedMemory<double>
 {
@@ -148,16 +182,6 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
     }
 }
 
-#define funcCheck(stmt) {                                            \
-  cudaError_t err = stmt;                                          \
-  if (err != cudaSuccess)                                          \
-  {                                                                \
-    printf( "Failed to run stmt %d\n", __LINE__);                 \
-    printf( "Got CUDA error ...  %s\n", cudaGetErrorString(err)); \
-    return -1;                                                   \
-  }                                                                \
-}
-
 // Returns the entropy of the complex image `Z`
 double H(const vector<double> P, const double *Br, const double *Bi,
         size_t K, size_t B_len)
@@ -206,20 +230,10 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     funcCheck(cudaMemcpy(d_Br, Br, B_len * sizeof(double), cudaMemcpyHostToDevice));
     funcCheck(cudaMemcpy(d_Bi, Bi, B_len * sizeof(double), cudaMemcpyHostToDevice));
 
-    reduce0<<<bs, nT, 0>>>(d_P, d_Br_shift, d_Bi_shift, d_Br, d_Bi, K, B_len);
+    funcCheck(cudaMemset(d_z_r, 0, N * sizeof(double)));
+    funcCheck(cudaMemset(d_z_i, 0, N * sizeof(double)));
 
-    funcCheck(cudaMemcpy(Br_shift, d_Br_shift, B_len * sizeof(double), cudaMemcpyDeviceToHost));
-    funcCheck(cudaMemcpy(Bi_shift, d_Bi_shift, B_len * sizeof(double), cudaMemcpyDeviceToHost));
-
-    // TODO: Explore reduction kernel
-    for (size_t n = 0; n < B_len; ++n) {
-      z_r[n / K] += Br_shift[n];
-      z_i[n / K] += Bi_shift[n];
-    }
-
-    funcCheck(cudaMemcpy(d_z_r, z_r, N * sizeof(double), cudaMemcpyHostToDevice));
-    funcCheck(cudaMemcpy(d_z_i, z_i, N * sizeof(double), cudaMemcpyHostToDevice));
-
+    reduce0<<<bs, nT, 0>>>(d_P, d_Br_shift, d_Bi_shift, d_z_r, d_z_i, d_Br, d_Bi, K, B_len);
     reduce1<<<bs, nT>>>(d_Z_mag, d_z_r, d_z_i, N);
 
     funcCheck(cudaFree(d_P));
@@ -234,7 +248,6 @@ double H(const vector<double> P, const double *Br, const double *Bi,
 
     // Returns the total image energy of the complex image Z_mag given the
     // magnitude of // the pixels in Z_mag
-    // TODO: Explore reduction kernel
     bs = (N + nT - 1) / nT; // cheap ceil()
 
     double *accum   = NULL;
