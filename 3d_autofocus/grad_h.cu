@@ -192,19 +192,35 @@ double H(const vector<double> P, const double *Br, const double *Bi,
 
     double *d_P, *d_Br, *d_Bi, *d_Z_mag = NULL;
 
+    const int nStreams = 8;
+    const int streamSize = B_len / nStreams;
+
+    cudaStream_t stream[nStreams];
+
+    for (int i = 0; i < nStreams; ++i)
+      funcCheck(cudaStreamCreate(&stream[i]));
+
     funcCheck(cudaMalloc((void **)&d_P,  K * sizeof(double)));
+
     funcCheck(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Bi, B_len * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
 
-    funcCheck(cudaMemcpy(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice));
-    funcCheck(cudaMemcpy(d_Br, Br, B_len * sizeof(double), cudaMemcpyHostToDevice));
-    funcCheck(cudaMemcpy(d_Bi, Bi, B_len * sizeof(double), cudaMemcpyHostToDevice));
+    funcCheck(cudaMemcpyAsync(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice, stream[0]));
 
-    kernelSum<double><<<N, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, K, d_Z_mag, d_P);
+    for (int i = 0; i < nStreams; ++i) {
+      int offset = i * streamSize;
 
-    // Returns the total image energy of the complex image Z_mag given the
-    // magnitude of the pixels in Z_mag
+      funcCheck(cudaMemcpyAsync(&d_Br[offset], &Br[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
+      funcCheck(cudaMemcpyAsync(&d_Bi[offset], &Bi[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
+    }
+
+    for (int i = 0; i < nStreams; ++i) {
+      int offset = i * streamSize;
+      int Z_offset = i * (N / nStreams);
+
+      kernelSum<double><<<N / nStreams, nT, 2 * nT * sizeof(double), stream[i]>>>(&d_Br[offset], &d_Bi[offset], K, &d_Z_mag[Z_offset], d_P);
+    }
 
     int bs = (N + nT - 1) / nT; // cheap ceil()
 
@@ -231,6 +247,9 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     funcCheck(cudaFree(d_accum));
 
     funcCheck(cudaFreeHost(accum));
+
+    for (int i = 0; i < nStreams; ++i)
+      funcCheck(cudaStreamDestroy(stream[i]));
 
     return - entropy;
 }
