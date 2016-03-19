@@ -26,36 +26,44 @@ using namespace std;
   }                                                               \
 }
 
-__device__ double atomicAdd(double* address, double val)
+template<typename T>
+__global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi, 
+    const size_t nrows, T * __restrict__ z_r, T * __restrict__ z_i,
+    const T * __restrict__ P)
 {
-  unsigned long long int* address_as_ull = (unsigned long long int*)address;
-  unsigned long long int old = *address_as_ull, assumed;
+  extern __shared__ T sdata[];
 
-  do {
-    assumed = old;
-    old = atomicCAS(address_as_ull, assumed, 
-        __double_as_longlong(val + 
-          __longlong_as_double(assumed)));
-  } while (assumed != old);
+  T *s1 = sdata, *s2 = &sdata[blockDim.x];
 
-  return __longlong_as_double(old);
-}
+  T x(0.0), y(0.0);
 
-__global__ void reduce0(double *P, double *Br_shift, double *Bi_shift,
-    double *z_r, double *z_i, double *Br, double *Bi, size_t K, size_t B_len)
-{
-  unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
+  const T * Br_col = &Br[blockIdx.x * nrows];
+  const T * Bi_col = &Bi[blockIdx.x * nrows];
 
-  if (n < B_len) {
-    Br_shift[n] = Br[n] * cos(P[n % K]) + Bi[n] * sin(P[n % K]);
-    Bi_shift[n] = Bi[n] * cos(P[n % K]) - Br[n] * sin(P[n % K]);
+  // Accumulate per thread partial sum
+  for (int i = threadIdx.x; i < nrows; i += blockDim.x) {
+    x += Br_col[i] * cos(P[i % nrows]) + Bi_col[i] * sin(P[i % nrows]);
+    y += Bi_col[i] * cos(P[i % nrows]) - Br_col[i] * sin(P[i % nrows]);
+  }
 
+  // load thread partial sum into shared memory
+  s1[threadIdx.x] = x;
+  s2[threadIdx.x] = y;
+
+  __syncthreads();
+
+  for (int offset = blockDim.x / 2; offset > 0; offset >>= 1) {
+    if (threadIdx.x < offset) {
+      s1[threadIdx.x] += s1[threadIdx.x + offset];
+      s2[threadIdx.x] += s2[threadIdx.x + offset];
+    }
     __syncthreads();
+  }
 
-    unsigned int k = n / K;
-
-    atomicAdd(z_r + k, Br_shift[n]);
-    atomicAdd(z_i + k, Bi_shift[n]);
+  // thread 0 writes the final result
+  if (threadIdx.x == 0) {
+    z_r[blockIdx.x] = s1[0];
+    z_i[blockIdx.x] = s2[0];
   }
 }
 
@@ -197,29 +205,20 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     double *Z_mag    = NULL;
     double *z_r      = NULL;
     double *z_i      = NULL;
-    double *Br_shift = NULL;
-    double *Bi_shift = NULL;
 
     funcCheck(cudaMallocHost((void **)&Z_mag, N * sizeof(double)));
     funcCheck(cudaMallocHost((void **)&z_r, N * sizeof(double)));
     funcCheck(cudaMallocHost((void **)&z_i, N * sizeof(double)));
-    funcCheck(cudaMallocHost((void **)&Br_shift, B_len * sizeof(double)));
-    funcCheck(cudaMallocHost((void **)&Bi_shift, B_len * sizeof(double)));
 
     const int nT = 1024;
-    int bs = (B_len + nT - 1) / nT; // cheap ceil()
 
     double *d_P, *d_Br, *d_Bi;
-    double *d_Br_shift = NULL, *d_Bi_shift = NULL;
     double *d_z_r = NULL, *d_z_i = NULL;
     double *d_Z_mag = NULL;
 
     funcCheck(cudaMalloc((void **)&d_P,  K * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Bi, B_len * sizeof(double)));
-
-    funcCheck(cudaMalloc((void **)&d_Br_shift, B_len * sizeof(double)));
-    funcCheck(cudaMalloc((void **)&d_Bi_shift, B_len * sizeof(double)));
 
     funcCheck(cudaMalloc((void **)&d_z_r, N * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_z_i, N * sizeof(double)));
@@ -233,22 +232,21 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     funcCheck(cudaMemset(d_z_r, 0, N * sizeof(double)));
     funcCheck(cudaMemset(d_z_i, 0, N * sizeof(double)));
 
-    reduce0<<<bs, nT, 0>>>(d_P, d_Br_shift, d_Bi_shift, d_z_r, d_z_i, d_Br, d_Bi, K, B_len);
+    kernelSum<double><<<N, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, K, d_z_r, d_z_i, d_P);
+
+    int bs = (N + nT - 1) / nT; // cheap ceil()
+
     reduce1<<<bs, nT>>>(d_Z_mag, d_z_r, d_z_i, N);
 
     funcCheck(cudaFree(d_P));
     funcCheck(cudaFree(d_Br));
     funcCheck(cudaFree(d_Bi));
 
-    funcCheck(cudaFree(d_Br_shift));
-    funcCheck(cudaFree(d_Bi_shift));
-
     funcCheck(cudaFree(d_z_r));
     funcCheck(cudaFree(d_z_i));
 
     // Returns the total image energy of the complex image Z_mag given the
     // magnitude of // the pixels in Z_mag
-    bs = (N + nT - 1) / nT; // cheap ceil()
 
     double *accum   = NULL;
     double *d_accum = NULL;
@@ -272,8 +270,6 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     funcCheck(cudaFreeHost(Z_mag));
     funcCheck(cudaFreeHost(z_r));
     funcCheck(cudaFreeHost(z_i));
-    funcCheck(cudaFreeHost(Br_shift));
-    funcCheck(cudaFreeHost(Bi_shift));
 
     return - entropy;
 }
