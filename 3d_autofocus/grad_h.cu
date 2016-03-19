@@ -28,8 +28,7 @@ using namespace std;
 
 template<typename T>
 __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi, 
-    const size_t nrows, T * __restrict__ z_r, T * __restrict__ z_i,
-    const T * __restrict__ P)
+    const size_t nrows, T * __restrict__ Z_mag, const T * __restrict__ P)
 {
   extern __shared__ T sdata[];
 
@@ -62,17 +61,7 @@ __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi,
 
   // thread 0 writes the final result
   if (threadIdx.x == 0) {
-    z_r[blockIdx.x] = s1[0];
-    z_i[blockIdx.x] = s2[0];
-  }
-}
-
-__global__ void reduce1(double *Z_mag, double *z_r, double *z_i, size_t N)
-{
-  unsigned int n = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (n < N) {
-    Z_mag[n] = z_r[n] * z_r[n] + z_i[n] * z_i[n];
+    Z_mag[blockIdx.x] = s1[0] * s1[0] + s2[0] * s2[0];
   }
 }
 
@@ -194,59 +183,30 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 double H(const vector<double> P, const double *Br, const double *Bi,
         size_t K, size_t B_len)
 {
+    const int nT = 1024;
+
     size_t N = B_len / K;
     double Ez(0), entropy(0);
 
     assert(B_len % K == 0); // length(B) should always be a multiple of K
 
-    // ------------------------------------------------------------------------
-    // Form Z_mag
-    // ------------------------------------------------------------------------
-    double *Z_mag    = NULL;
-    double *z_r      = NULL;
-    double *z_i      = NULL;
-
-    funcCheck(cudaMallocHost((void **)&Z_mag, N * sizeof(double)));
-    funcCheck(cudaMallocHost((void **)&z_r, N * sizeof(double)));
-    funcCheck(cudaMallocHost((void **)&z_i, N * sizeof(double)));
-
-    const int nT = 1024;
-
-    double *d_P, *d_Br, *d_Bi;
-    double *d_z_r = NULL, *d_z_i = NULL;
-    double *d_Z_mag = NULL;
+    double *d_P, *d_Br, *d_Bi, *d_Z_mag = NULL;
 
     funcCheck(cudaMalloc((void **)&d_P,  K * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Bi, B_len * sizeof(double)));
-
-    funcCheck(cudaMalloc((void **)&d_z_r, N * sizeof(double)));
-    funcCheck(cudaMalloc((void **)&d_z_i, N * sizeof(double)));
     funcCheck(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
 
     funcCheck(cudaMemcpy(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice));
-
     funcCheck(cudaMemcpy(d_Br, Br, B_len * sizeof(double), cudaMemcpyHostToDevice));
     funcCheck(cudaMemcpy(d_Bi, Bi, B_len * sizeof(double), cudaMemcpyHostToDevice));
 
-    funcCheck(cudaMemset(d_z_r, 0, N * sizeof(double)));
-    funcCheck(cudaMemset(d_z_i, 0, N * sizeof(double)));
-
-    kernelSum<double><<<N, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, K, d_z_r, d_z_i, d_P);
-
-    int bs = (N + nT - 1) / nT; // cheap ceil()
-
-    reduce1<<<bs, nT>>>(d_Z_mag, d_z_r, d_z_i, N);
-
-    funcCheck(cudaFree(d_P));
-    funcCheck(cudaFree(d_Br));
-    funcCheck(cudaFree(d_Bi));
-
-    funcCheck(cudaFree(d_z_r));
-    funcCheck(cudaFree(d_z_i));
+    kernelSum<double><<<N, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, K, d_Z_mag, d_P);
 
     // Returns the total image energy of the complex image Z_mag given the
-    // magnitude of // the pixels in Z_mag
+    // magnitude of the pixels in Z_mag
+
+    int bs = (N + nT - 1) / nT; // cheap ceil()
 
     double *accum   = NULL;
     double *d_accum = NULL;
@@ -263,13 +223,14 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     funcCheck(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
     for (size_t b(0); b < bs; ++b) { entropy += accum[b]; }
 
+    funcCheck(cudaFree(d_P));
+    funcCheck(cudaFree(d_Br));
+    funcCheck(cudaFree(d_Bi));
+
     funcCheck(cudaFree(d_Z_mag));
     funcCheck(cudaFree(d_accum));
 
     funcCheck(cudaFreeHost(accum));
-    funcCheck(cudaFreeHost(Z_mag));
-    funcCheck(cudaFreeHost(z_r));
-    funcCheck(cudaFreeHost(z_i));
 
     return - entropy;
 }
