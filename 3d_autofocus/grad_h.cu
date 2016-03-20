@@ -13,12 +13,13 @@
 #include <assert.h>
 
 #include <cuda_runtime.h>
+#include <cublas_v2.h>
 
 using namespace std;
 
 // Convenience function for checking CUDA runtime API results
 // can be wrapped around any runtime API call. No-op in release builds.
-  inline
+inline
 cudaError_t checkCuda(cudaError_t result)
 {
 #if defined(DEBUG) || defined(_DEBUG)
@@ -30,7 +31,7 @@ cudaError_t checkCuda(cudaError_t result)
   return result;
 }
 
-  template<typename T>
+template<typename T>
 __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi, 
     const size_t nrows, T * __restrict__ Z_mag, const T * __restrict__ P)
 {
@@ -69,42 +70,10 @@ __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi,
   }
 }
 
-template<class T>
-struct SharedMemory
-{
-  __device__ inline operator       T *()
-  {
-    extern __shared__ int __smem[];
-    return (T *)__smem;
-  }
-
-  __device__ inline operator const T *() const
-  {
-    extern __shared__ int __smem[];
-    return (T *)__smem;
-  }
-};
-
-template<>
-struct SharedMemory<double>
-{
-  __device__ inline operator       double *()
-  {
-    extern __shared__ double __smem_d[];
-    return (double *)__smem_d;
-  }
-
-  __device__ inline operator const double *() const
-  {
-    extern __shared__ double __smem_d[];
-    return (double *)__smem_d;
-  }
-};
-
 template <class T>
 __global__ void sum(T *g_idata, T *g_odata, unsigned int n)
 {
-  T *sdata = SharedMemory<T>();
+  extern __shared__ T sdata[];
 
   // load shared mem
   unsigned int tid = threadIdx.x;
@@ -131,15 +100,15 @@ __global__ void sum(T *g_idata, T *g_odata, unsigned int n)
 }
 
 template <class T>
-__global__ void computeEntropy(T *g_idata, T *g_odata, double Ez, unsigned int n)
+__global__ void computeEntropy(T *g_idata, T *g_odata, double *Ez, unsigned int n)
 {
-  T *sdata = SharedMemory<T>();
+  extern __shared__ T sdata[];
 
   // load shared mem
   unsigned int tid = threadIdx.x;
   unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
 
-  sdata[tid] = (i < n) ? (g_idata[i] / Ez) * log(g_idata[i] / Ez) : 0;
+  sdata[tid] = (i < n) ? (g_idata[i] / *Ez) * log(g_idata[i] / *Ez) : 0;
 
   __syncthreads();
 
@@ -167,7 +136,7 @@ double H(const vector<double> P, const double *Br, const double *Bi,
   const int nT = 1024;
 
   size_t N = B_len / K;
-  double Ez(0), entropy(0);
+  double entropy(0);
 
   assert(B_len % K == 0); // length(B) should always be a multiple of K
 
@@ -187,29 +156,33 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     kernelSum<double><<<N / nStreams, nT, 2 * nT * sizeof(double), stream[i]>>>(&d_Br[offset], &d_Bi[offset], K, &d_Z_mag[Z_offset], d_P);
   }
 
+  cudaDeviceSynchronize();
+
   int bs = (N + nT - 1) / nT; // cheap ceil()
 
-  double *accum   = NULL;
+  double *d_Ez = NULL;
   double *d_accum = NULL;
 
-  checkCuda(cudaMallocHost((void **)&accum, bs * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_accum, bs * sizeof(double)));
+  checkCuda(cudaMalloc((void **)&d_Ez, sizeof(double)));
 
-  sum<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, N);
-  checkCuda(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
-  for (size_t b(0); b < bs; ++b) { Ez += accum[b]; }
+  cublasHandle_t handle;
 
+  cublasCreate(&handle);
+  cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
-  computeEntropy<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, Ez, N);
-  checkCuda(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
-  for (size_t b(0); b < bs; ++b) { entropy += accum[b]; }
+  cublasDasum(handle, N, d_Z_mag, 1, d_Ez);
+
+  computeEntropy<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, d_Ez, N);
+
+  cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_HOST);
+  cublasDasum(handle, bs, d_accum, 1, &entropy);
 
   checkCuda(cudaFree(d_P));
 
   checkCuda(cudaFree(d_Z_mag));
   checkCuda(cudaFree(d_accum));
-
-  checkCuda(cudaFreeHost(accum));
+  checkCuda(cudaFree(d_Ez));
 
   return - entropy;
 }
