@@ -14,7 +14,7 @@ double drand() {
 }
 
 int main() {
-    const size_t K     = 100;
+    const size_t K     = 1000;
     const size_t B_len = K * 10 * 10 * 10;
 
     double *pr = new double[K];

@@ -16,14 +16,18 @@
 
 using namespace std;
 
-#define funcCheck(stmt) {                                         \
-  cudaError_t err = stmt;                                         \
-  if (err != cudaSuccess)                                         \
-  {                                                               \
-    printf( "Failed to run stmt %d\n", __LINE__);                 \
-    printf( "Got CUDA error ...  %s\n", cudaGetErrorString(err)); \
-    return -1;                                                    \
-  }                                                               \
+// Convenience function for checking CUDA runtime API results
+// can be wrapped around any runtime API call. No-op in release builds.
+inline
+cudaError_t checkCuda(cudaError_t result)
+{
+#if defined(DEBUG) || defined(_DEBUG)
+  if (result != cudaSuccess) {
+    fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
+    assert(result == cudaSuccess);
+  }
+#endif
+  return result;
 }
 
 template<typename T>
@@ -155,33 +159,10 @@ __global__ void reduce2(T *g_idata, T *g_odata, double Ez, unsigned int n)
     if (tid == 0) g_odata[blockIdx.x] = sdata[0];
 }
 
-// TODO: Nice doc comments
-void gradH(double *phi_offsets, const double *Br, const double *Bi,
-        double *grad, size_t K, size_t B_len)
-{
-    vector<double> P(phi_offsets, phi_offsets + K);
-
-    PRINTF("In gradH, about to compute Z\n");
-    PRINTF("Computed Z\n");
-    double H_not = H(P, Br, Bi, K, B_len);
-    PRINTF("Computed H_not\n");
-
-    auto Pr_k(P.begin());
-
-    while (Pr_k != P.end()) {
-      if (Pr_k != P.begin()) {
-        *(Pr_k - 1) -= delta;
-      }
-
-      *Pr_k++ += delta;
-
-      populate_grad_k(grad++, H_not, P, Br, Bi, K, B_len);
-    }
-}
-
 // Returns the entropy of the complex image `Z`
 double H(const vector<double> P, const double *Br, const double *Bi,
-        size_t K, size_t B_len)
+    double *d_Br, double *d_Bi, size_t K, size_t B_len,
+    cudaStream_t *stream, int nStreams, int streamSize)
 {
     const int nT = 1024;
 
@@ -190,30 +171,14 @@ double H(const vector<double> P, const double *Br, const double *Bi,
 
     assert(B_len % K == 0); // length(B) should always be a multiple of K
 
-    double *d_P, *d_Br, *d_Bi, *d_Z_mag = NULL;
+    double *d_P, *d_Z_mag = NULL;
 
-    const int nStreams = 8;
-    const int streamSize = B_len / nStreams;
+    // TODO: Use pinned memory
+    checkCuda(cudaMalloc((void **)&d_P,  K * sizeof(double)));
 
-    cudaStream_t stream[nStreams];
+    checkCuda(cudaMemcpyAsync(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice, 0));
 
-    for (int i = 0; i < nStreams; ++i)
-      funcCheck(cudaStreamCreate(&stream[i]));
-
-    funcCheck(cudaMalloc((void **)&d_P,  K * sizeof(double)));
-
-    funcCheck(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
-    funcCheck(cudaMalloc((void **)&d_Bi, B_len * sizeof(double)));
-    funcCheck(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
-
-    funcCheck(cudaMemcpyAsync(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice, stream[0]));
-
-    for (int i = 0; i < nStreams; ++i) {
-      int offset = i * streamSize;
-
-      funcCheck(cudaMemcpyAsync(&d_Br[offset], &Br[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
-      funcCheck(cudaMemcpyAsync(&d_Bi[offset], &Bi[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
-    }
+    checkCuda(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
 
     for (int i = 0; i < nStreams; ++i) {
       int offset = i * streamSize;
@@ -227,38 +192,76 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     double *accum   = NULL;
     double *d_accum = NULL;
 
-    funcCheck(cudaMallocHost((void **)&accum, bs * sizeof(double)));
-    funcCheck(cudaMalloc((void **)&d_accum, bs * sizeof(double)));
+    checkCuda(cudaMallocHost((void **)&accum, bs * sizeof(double)));
+    checkCuda(cudaMalloc((void **)&d_accum, bs * sizeof(double)));
 
     sum<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, N);
-    funcCheck(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
     for (size_t b(0); b < bs; ++b) { Ez += accum[b]; }
 
 
     reduce2<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, Ez, N);
-    funcCheck(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
+    checkCuda(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
     for (size_t b(0); b < bs; ++b) { entropy += accum[b]; }
 
-    funcCheck(cudaFree(d_P));
-    funcCheck(cudaFree(d_Br));
-    funcCheck(cudaFree(d_Bi));
+    checkCuda(cudaFree(d_P));
 
-    funcCheck(cudaFree(d_Z_mag));
-    funcCheck(cudaFree(d_accum));
+    checkCuda(cudaFree(d_Z_mag));
+    checkCuda(cudaFree(d_accum));
 
-    funcCheck(cudaFreeHost(accum));
-
-    for (int i = 0; i < nStreams; ++i)
-      funcCheck(cudaStreamDestroy(stream[i]));
+    checkCuda(cudaFreeHost(accum));
 
     return - entropy;
 }
 
-void populate_grad_k(double *grad_i, double H_not, const vector<double> P,
-        const double *Br, const double *Bi, size_t K,
-        size_t B_len)
+// TODO: Nice doc comments
+void gradH(double *phi_offsets, const double *Br, const double *Bi,
+        double *grad, size_t K, size_t B_len)
 {
-    double H_i = H(P, Br, Bi, K, B_len);
-    *grad_i = (H_i - H_not) / delta;
-}
+    vector<double> P(phi_offsets, phi_offsets + K);
 
+    const int nStreams = 8;
+    const int streamSize = B_len / nStreams;
+
+    cudaStream_t stream[nStreams];
+
+    for (int i = 0; i < nStreams; ++i)
+      checkCuda(cudaStreamCreate(&stream[i]));
+
+    double *d_Br, *d_Bi;
+
+    // TODO: Use pinned memory
+    checkCuda(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
+    checkCuda(cudaMalloc((void **)&d_Bi, B_len * sizeof(double)));
+
+    for (int i = 0; i < nStreams; ++i) {
+      int offset = i * streamSize;
+
+      checkCuda(cudaMemcpyAsync(&d_Br[offset], &Br[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
+      checkCuda(cudaMemcpyAsync(&d_Bi[offset], &Bi[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
+    }
+
+    PRINTF("In gradH, about to compute Z\n");
+    PRINTF("Computed Z\n");
+    double H_not = H(P, Br, Bi, d_Br, d_Bi, K, B_len, stream, nStreams, streamSize);
+    PRINTF("Computed H_not\n");
+
+    auto Pr_k(P.begin());
+
+    while (Pr_k != P.end()) {
+      if (Pr_k != P.begin()) {
+        *(Pr_k - 1) -= delta;
+      }
+
+      *Pr_k++ += delta;
+
+      double H_i = H(P, Br, Bi, d_Br, d_Bi, K, B_len, stream, nStreams, streamSize);
+      *grad++ = (H_i - H_not) / delta;
+    }
+
+    checkCuda(cudaFree(d_Br));
+    checkCuda(cudaFree(d_Bi));
+
+    for (int i = 0; i < nStreams; ++i)
+      checkCuda(cudaStreamDestroy(stream[i]));
+}
