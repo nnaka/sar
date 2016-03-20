@@ -45,9 +45,11 @@ __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi,
   const T * Bi_col = &Bi[blockIdx.x * nrows];
 
   // Accumulate per thread partial sum
+  double sin, cos;
   for (int i = threadIdx.x; i < nrows; i += blockDim.x) {
-    x += Br_col[i] * cos(P[i % nrows]) + Bi_col[i] * sin(P[i % nrows]);
-    y += Bi_col[i] * cos(P[i % nrows]) - Br_col[i] * sin(P[i % nrows]);
+    sincos(P[i % nrows], &sin, &cos);
+    x += Br_col[i] * cos + Bi_col[i] * sin;
+    y += Bi_col[i] * cos - Br_col[i] * sin;
   }
 
   // load thread partial sum into shared memory
