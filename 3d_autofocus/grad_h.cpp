@@ -58,7 +58,7 @@ double H(const vector<double> P, const double *Br, const double *Bi,
         size_t K, size_t B_len)
 {
     size_t N = B_len / K;
-    double Ez = 0, entropy = 0;
+    double Ez = 0;
 
     assert(B_len % K == 0); // length(B) should always be a multiple of K
 
@@ -68,6 +68,7 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     // Form Z_mag
     // ------------------------------------------------------------------------
     double z_r, z_i, a, b, c, d;
+    double acc = 0;
     for (size_t n = 0; n < N; ++n) {
         z_r = 0; z_i = 0;
 
@@ -86,16 +87,11 @@ double H(const vector<double> P, const double *Br, const double *Bi,
         // Returns the total image energy of the complex image Z_mag given the
         // magnitude of // the pixels in Z_mag
         Ez += Z_mag[n];
-    }
-
-    double z_intensity = 0;
-    for (size_t n = 0; n < N; ++n) {
-        z_intensity = Z_mag[n] / Ez;
-        entropy += z_intensity * log(z_intensity);
+        acc += Z_mag[n] * log(Z_mag[n]);
     }
 
     delete[] Z_mag;
-    return - entropy;
+    return - (acc - Ez * log(Ez)) / Ez;
 }
 
 void populate_grad_k(double *grad_i, double H_not, const vector<double> P,
