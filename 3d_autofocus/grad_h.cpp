@@ -16,48 +16,14 @@
 
 using namespace std;
 
+const double delta = 1e-3;
+
 static const auto nthreads = 64 - 1;
 static thread threads[nthreads];
 
-// TODO: Nice doc comments
-void gradH(double *phi_offsets, const double *Br, const double *Bi,
-        double *grad, size_t K, size_t B_len)
-{
-    vector<double> P(phi_offsets, phi_offsets + K);
-
-    PRINTF("In gradH, about to compute Z\n");
-    PRINTF("Computed Z\n");
-    double H_not = H(P, Br, Bi, K, B_len);
-    PRINTF("Computed H_not\n");
-
-    auto Pr_k(P.begin());
-    while (Pr_k != P.end()) {
-        int i;
-        for (i = 0; i < nthreads && Pr_k != P.end(); ++i) {
-            if (Pr_k != P.begin()) {
-                *(Pr_k - 1) -= delta;
-            }
-
-            *Pr_k++ += delta;
-
-            threads[i] = thread(populate_grad_k, grad++, H_not,
-                        P, Br, Bi, K, B_len);
-        }
-
-        // Keep main thread busy but only if we have more to do
-        if (Pr_k != P.end()) {
-            *(Pr_k - 1) -= delta;
-            *Pr_k++ += delta;
-            populate_grad_k(grad++, H_not, P, Br, Bi, K, B_len);
-        }
-
-        while (i > 0) { threads[--i].join(); }
-    }
-}
-
 // Returns the entropy of the complex image `Z`
-double H(const vector<double> P, const double *Br, const double *Bi,
-        size_t K, size_t B_len)
+double H_not(const double *P, const double *Br, const double *Bi,
+        double *Zr, double *Zi, size_t K, size_t B_len)
 {
     size_t N = B_len / K;
     double Ez = 0;
@@ -69,22 +35,22 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     // ------------------------------------------------------------------------
     // Form Z_mag
     // ------------------------------------------------------------------------
-    double z_r, z_i, a, b, c, d;
+    double a, b, c, d;
     double acc = 0;
     for (size_t n = 0; n < N; ++n) {
-        z_r = 0; z_i = 0;
+        Zr[n] = 0; Zi[n] = 0;
 
-        for (auto pr : P) {
+        for (size_t k(0); k < K; ++k) {
             a = *Br++;
             b = *Bi++;
-            c = cos(pr);
-            d = sin(pr);
+            c = cos(P[k]);
+            d = sin(P[k]);
 
-            z_r += (a * c + b * d);
-            z_i += (b * c - a * d);
+            Zr[n] += (a * c + b * d);
+            Zi[n] += (b * c - a * d);
         }
 
-        Z_mag[n] = z_r * z_r + z_i * z_i;
+        Z_mag[n] = Zr[n] * Zr[n] + Zi[n] * Zi[n];
 
         // Returns the total image energy of the complex image Z_mag given the
         // magnitude of // the pixels in Z_mag
@@ -96,11 +62,68 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     return - (acc - Ez * log(Ez)) / Ez;
 }
 
-void populate_grad_k(double *grad_i, double H_not, const vector<double> P,
-        const double *Br, const double *Bi, size_t K,
-        size_t B_len)
+void populate_grad_k(double *grad_i, double H0, const
+        double *Br, const double *Bi, const double *Zr, const double *Zi, double
+        Ar, double Ai, size_t K, size_t N, size_t k)
 {
-    double H_i = H(P, Br, Bi, K, B_len);
-    *grad_i = (H_i - H_not) / delta;
+    double Ez = 0, acc = 0;
+
+    for (size_t n(0); n < N; ++n) {
+        double Zn_r = Ar * Br[n * K + k] - Ai * Bi[n * K + k] + Zr[n];
+        double Zn_i = Ar * Bi[n * K + k] + Ai * Br[n * K + k] + Zi[n];
+
+        double Zn_mag = Zn_r * Zn_r + Zn_i * Zn_i;
+
+        Ez += Zn_mag;
+        acc += Zn_mag * log(Zn_mag);
+    }
+
+    *grad_i = (- ((acc - Ez * log(Ez)) / Ez) - H0) / delta;
 }
 
+// TODO: Nice doc comments
+void gradH(double *phi_offsets, const double *Br, const double *Bi,
+        double *grad, size_t K, size_t B_len)
+{
+    size_t N = B_len / K;
+    assert(B_len % K == 0); // length(B) should always be a multiple of K
+
+    double *Zr = new double[B_len], *Zi = new double[B_len];
+    double *Ar = new double[K], *Ai = new double[K];
+
+    PRINTF("In gradH, about to compute Z\n");
+    PRINTF("Computed Z\n");
+    double H0 = H_not(phi_offsets, Br, Bi, Zr, Zi, K, B_len);
+    PRINTF("Computed H_not\n");
+
+    // Compute alpha
+    double sin_phi, cos_phi;
+    double sin_delt, cos_delt;
+    
+    __sincos(delta, &sin_delt, &cos_delt);
+
+    for (size_t k(0); k < K; ++k) {
+        __sincos(phi_offsets[k], &sin_phi, &cos_phi);
+
+        Ar[k] = (-sin_delt) * sin_phi + cos_delt * cos_phi - cos_phi;
+        Ai[k] = sin_delt * (-cos_phi) - cos_delt * sin_phi + sin_phi;
+    }
+
+    size_t k(0);
+    while (k < K) {
+        int i;
+        for (i = 0; i < nthreads && k < K; ++i) {
+            threads[i] = thread(populate_grad_k, grad++, H0,
+                        Br, Bi, Zr, Zi, Ar[k], Ai[k], K, N, k);
+            ++k;
+        }
+
+        // Keep main thread busy but only if we have more to do
+        if (k < K) {
+            populate_grad_k(grad++, H0, Br, Bi, Zr, Zi, Ar[k], Ai[k], K, N, k);
+            ++k;
+        }
+
+        while (i > 0) { threads[--i].join(); }
+    }
+}
