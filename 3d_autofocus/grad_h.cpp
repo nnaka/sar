@@ -16,10 +16,13 @@
 
 using namespace std;
 
-const double delta = 1e-3;
-
 static const auto nthreads = 64 - 1;
 static thread threads[nthreads];
+
+inline double entropy(double acc, double Ez)
+{
+  return (acc - Ez * log(Ez)) / Ez;
+}
 
 // Returns the entropy of the complex image `Z`
 double H_not(const double *P, const double *Br, const double *Bi,
@@ -59,7 +62,7 @@ double H_not(const double *P, const double *Br, const double *Bi,
     }
 
     delete[] Z_mag;
-    return - (acc - Ez * log(Ez)) / Ez;
+    return -entropy(acc, Ez);
 }
 
 void populate_grad_k(double *grad_i, double H0, const
@@ -78,7 +81,7 @@ void populate_grad_k(double *grad_i, double H0, const
         acc += Zn_mag * log(Zn_mag);
     }
 
-    *grad_i = (- ((acc - Ez * log(Ez)) / Ez) - H0) / delta;
+    *grad_i = (-entropy(acc, Ez) - H0) / delta;
 }
 
 // TODO: Nice doc comments
@@ -100,10 +103,10 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
     double sin_phi, cos_phi;
     double sin_delt, cos_delt;
     
-    __sincos(delta, &sin_delt, &cos_delt);
+    sincos(delta, &sin_delt, &cos_delt);
 
     for (size_t k(0); k < K; ++k) {
-        __sincos(phi_offsets[k], &sin_phi, &cos_phi);
+        sincos(phi_offsets[k], &sin_phi, &cos_phi);
 
         Ar[k] = (-sin_delt) * sin_phi + cos_delt * cos_phi - cos_phi;
         Ai[k] = sin_delt * (-cos_phi) - cos_delt * sin_phi + sin_phi;

@@ -17,23 +17,81 @@
 
 using namespace std;
 
+const int nT = 1024;
+
+#define checkCuda(result) checkCudaInner(result, __LINE__)
+
 // Convenience function for checking CUDA runtime API results
 // can be wrapped around any runtime API call. No-op in release builds.
 inline
-cudaError_t checkCuda(cudaError_t result)
+cudaError_t checkCudaInner(cudaError_t result, int lineno)
 {
-#if defined(DEBUG) || defined(_DEBUG)
   if (result != cudaSuccess) {
-    fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
+    fprintf(stderr, "CUDA Runtime Error: %s on line %d\n", cudaGetErrorString(result), lineno);
     assert(result == cudaSuccess);
   }
-#endif
   return result;
 }
 
+__device__ inline double entropy(double acc, double Ez)
+{
+  return (acc - Ez * log(Ez)) / Ez;
+}
+
+// B is a matrix with K columns and N rows
+template<typename T>
+__global__ void computeGrad(const T * __restrict__ Br, const T * __restrict__ Bi, 
+    const T * __restrict__ Zr, const T * __restrict__ Zi,
+    const T * __restrict__ Ar, const T * __restrict__ Ai,
+    T * __restrict__ grad, size_t N, size_t K, double H0, double delta)
+{
+  extern __shared__ T sdata[];
+
+  T *Ez = sdata, *acc = &sdata[blockDim.x];
+
+  T x(0.0), y(0.0);
+
+  const T * Br_col = &Br[blockIdx.x];
+  const T * Bi_col = &Bi[blockIdx.x];
+
+  // Accumulate per thread partial sum
+  for (int i = threadIdx.x; i < N; i += blockDim.x) {
+    int col_idx = i * K;
+
+    double Zn_r = Ar[blockIdx.x] * Br_col[col_idx] - Ai[blockIdx.x] * Bi_col[col_idx] + Zr[i];
+    double Zn_i = Ar[blockIdx.x] * Bi_col[col_idx] + Ai[blockIdx.x] * Br_col[col_idx] + Zi[i];
+
+    double Zn_mag = Zn_r * Zn_r + Zn_i * Zn_i;
+
+    x += Zn_mag;
+    y += Zn_mag * log(Zn_mag);
+  }
+
+  // load thread partial sum into shared memory
+  Ez[threadIdx.x] = x;
+  acc[threadIdx.x] = y;
+
+  __syncthreads();
+
+  for (int offset = blockDim.x / 2; offset > 0; offset >>= 1) {
+    if (threadIdx.x < offset) {
+      Ez[threadIdx.x] += Ez[threadIdx.x + offset];
+      acc[threadIdx.x] += acc[threadIdx.x + offset];
+    }
+    __syncthreads();
+  }
+
+  // thread 0 writes the final result
+  if (threadIdx.x == 0) {
+    grad[blockIdx.x] = (-entropy(acc[0], Ez[0]) - H0) / delta;
+  }
+}
+
+// B is a matrix with K columns and N rows
 template<typename T>
 __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi, 
-    const size_t nrows, T * __restrict__ Z_mag, const T * __restrict__ P)
+    T * __restrict__ Zr, T * __restrict__ Zi,
+    const size_t K, T * __restrict__ Z_mag, const T * __restrict__ P)
 {
   extern __shared__ T sdata[];
 
@@ -41,15 +99,15 @@ __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi,
 
   T x(0.0), y(0.0);
 
-  const T * Br_col = &Br[blockIdx.x * nrows];
-  const T * Bi_col = &Bi[blockIdx.x * nrows];
+  const T * Br_row = &Br[blockIdx.x * K];
+  const T * Bi_row = &Bi[blockIdx.x * K];
 
   // Accumulate per thread partial sum
   double sin, cos;
-  for (int i = threadIdx.x; i < nrows; i += blockDim.x) {
-    sincos(P[i % nrows], &sin, &cos);
-    x += Br_col[i] * cos + Bi_col[i] * sin;
-    y += Bi_col[i] * cos - Br_col[i] * sin;
+  for (int i = threadIdx.x; i < K; i += blockDim.x) {
+    sincos(P[i % K], &sin, &cos);
+    x += Br_row[i] * cos + Bi_row[i] * sin;
+    y += Bi_row[i] * cos - Br_row[i] * sin;
   }
 
   // load thread partial sum into shared memory
@@ -68,6 +126,9 @@ __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi,
 
   // thread 0 writes the final result
   if (threadIdx.x == 0) {
+    Zr[blockIdx.x] = s1[0];
+    Zi[blockIdx.x] = s2[0];
+
     Z_mag[blockIdx.x] = s1[0] * s1[0] + s2[0] * s2[0];
   }
 }
@@ -98,27 +159,36 @@ __global__ void computeEntropy(T *g_idata, T *g_odata, double *Ez, unsigned int 
   }
 
   // write result for this block to global mem
-  if (tid == 0) g_odata[blockIdx.x] = sdata[0];
+  if (tid == 0) {
+    g_odata[blockIdx.x] = sdata[0];
+  }
+}
+
+__global__ void computeAlpha(const double *P, double sin_delt, double cos_delt,
+    double *Ar, double *Ai, size_t K)
+{
+  unsigned int k = blockIdx.x*blockDim.x + threadIdx.x;
+
+  double sin_phi, cos_phi;
+  if (k < K) {
+    sincos(P[k], &sin_phi, &cos_phi);
+
+    Ar[k] = (-sin_delt) * sin_phi + cos_delt * cos_phi - cos_phi;
+    Ai[k] = sin_delt * (-cos_phi) - cos_delt * sin_phi + sin_phi;
+  }
 }
 
 // Returns the entropy of the complex image `Z`
-double H(const vector<double> P, const double *Br, const double *Bi,
-    double *d_Br, double *d_Bi, size_t K, size_t B_len,
-    cudaStream_t *stream, int nStreams, int streamSize)
+double H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
+    *Zi, size_t K, size_t B_len, cudaStream_t *stream, int nStreams, int
+    streamSize)
 {
-  const int nT = 1024;
-
   size_t N = B_len / K;
   double entropy(0);
 
   assert(B_len % K == 0); // length(B) should always be a multiple of K
 
-  double *d_P, *d_Z_mag = NULL;
-
-  // TODO: Use pinned memory
-  checkCuda(cudaMalloc((void **)&d_P,  K * sizeof(double)));
-
-  checkCuda(cudaMemcpyAsync(d_P, &P[0], K * sizeof(double), cudaMemcpyHostToDevice, 0));
+  double *d_Z_mag = NULL;
 
   checkCuda(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
 
@@ -126,7 +196,8 @@ double H(const vector<double> P, const double *Br, const double *Bi,
     int offset = i * streamSize;
     int Z_offset = i * (N / nStreams);
 
-    kernelSum<double><<<N / nStreams, nT, 2 * nT * sizeof(double), stream[i]>>>(&d_Br[offset], &d_Bi[offset], K, &d_Z_mag[Z_offset], d_P);
+    kernelSum<double><<<N / nStreams, nT, 2 * nT * sizeof(double),
+      stream[i]>>>(&d_Br[offset], &d_Bi[offset], &Zr[Z_offset], &Zi[Z_offset], K, &d_Z_mag[Z_offset], d_P);
   }
 
   cudaDeviceSynchronize();
@@ -135,7 +206,9 @@ double H(const vector<double> P, const double *Br, const double *Bi,
 
   double *d_Ez = NULL;
   double *d_accum = NULL;
+  double *accum = NULL;
 
+  checkCuda(cudaMallocHost((void **)&accum, bs * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_accum, bs * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_Ez, sizeof(double)));
 
@@ -144,29 +217,33 @@ double H(const vector<double> P, const double *Br, const double *Bi,
   cublasCreate(&handle);
   cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
+  // cublasDasum sums the absolute values, but Z_mag is always positive so this
+  // is correct
   cublasDasum(handle, N, d_Z_mag, 1, d_Ez);
 
   computeEntropy<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, d_Ez, N);
 
-  cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_HOST);
-  cublasDasum(handle, bs, d_accum, 1, &entropy);
+  checkCuda(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
 
-  checkCuda(cudaFree(d_P));
+  for (size_t b(0); b < bs; ++b) { entropy += accum[b]; }
 
   checkCuda(cudaFree(d_Z_mag));
   checkCuda(cudaFree(d_accum));
   checkCuda(cudaFree(d_Ez));
+  cublasDestroy(handle);
 
-  return - entropy;
+  return -entropy;
 }
 
 // TODO: Nice doc comments
 void gradH(double *phi_offsets, const double *Br, const double *Bi,
     double *grad, size_t K, size_t B_len)
 {
+  const size_t N = B_len / K;
+
   vector<double> P(phi_offsets, phi_offsets + K);
 
-  const int nStreams = 8;
+  const int nStreams = (B_len > 8) ? 8 : 1;
   const int streamSize = B_len / nStreams;
 
   cudaStream_t stream[nStreams];
@@ -174,11 +251,24 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   for (int i = 0; i < nStreams; ++i)
     checkCuda(cudaStreamCreate(&stream[i]));
 
-  double *d_Br, *d_Bi;
+  double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi, *d_Ar, *d_Ai, *d_grad;
+
+  // TODO: Use pinned memory
+  checkCuda(cudaMalloc((void **)&d_P,  K * sizeof(double)));
+
+  checkCuda(cudaMemcpyAsync(d_P, phi_offsets, K * sizeof(double), cudaMemcpyHostToDevice, 0));
 
   // TODO: Use pinned memory
   checkCuda(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_Bi, B_len * sizeof(double)));
+
+  checkCuda(cudaMalloc((void **)&d_Zr, N * sizeof(double)));
+  checkCuda(cudaMalloc((void **)&d_Zi, N * sizeof(double)));
+
+  checkCuda(cudaMalloc((void **)&d_Ar,  K * sizeof(double)));
+  checkCuda(cudaMalloc((void **)&d_Ai,  K * sizeof(double)));
+
+  checkCuda(cudaMalloc((void **)&d_grad, K * sizeof(double)));
 
   for (int i = 0; i < nStreams; ++i) {
     int offset = i * streamSize;
@@ -189,24 +279,34 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
   PRINTF("In gradH, about to compute Z\n");
   PRINTF("Computed Z\n");
-  double H_not = H(P, Br, Bi, d_Br, d_Bi, K, B_len, stream, nStreams, streamSize);
+  double H0 = H_not(d_P, d_Br, d_Bi, d_Zr, d_Zi, K, B_len, stream, nStreams, streamSize);
   PRINTF("Computed H_not\n");
 
-  auto Pr_k(P.begin());
+  // --------------------------------------------------------------------------
+  // Compute alpha
+  // --------------------------------------------------------------------------
 
-  while (Pr_k != P.end()) {
-    if (Pr_k != P.begin()) {
-      *(Pr_k - 1) -= delta;
-    }
+  double sin_delt, cos_delt;
 
-    *Pr_k++ += delta;
+  sincos(delta, &sin_delt, &cos_delt);
 
-    double H_i = H(P, Br, Bi, d_Br, d_Bi, K, B_len, stream, nStreams, streamSize);
-    *grad++ = (H_i - H_not) / delta;
-  }
+  int bs = (K + nT - 1) / nT; // cheap ceil
+  computeAlpha<<<bs, nT>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
+
+  computeGrad<double><<<K, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, d_Zr, d_Zi, d_Ar,
+      d_Ai, d_grad, N, K, H0, delta);
+
+  checkCuda(cudaMemcpyAsync(grad, d_grad, K * sizeof(double), cudaMemcpyDeviceToHost, 0));
 
   checkCuda(cudaFree(d_Br));
   checkCuda(cudaFree(d_Bi));
+
+  checkCuda(cudaFree(d_Zr));
+  checkCuda(cudaFree(d_Zi));
+
+  checkCuda(cudaFree(d_P));
+  checkCuda(cudaFree(d_Ai));
+  checkCuda(cudaFree(d_Ar));
 
   for (int i = 0; i < nStreams; ++i)
     checkCuda(cudaStreamDestroy(stream[i]));
