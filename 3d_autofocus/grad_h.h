@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <cstdlib>
 
 const double delta = 1e-3;
 

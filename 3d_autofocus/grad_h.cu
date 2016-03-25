@@ -235,13 +235,39 @@ double H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
   return -entropy;
 }
 
+void gradH_priv(double *d_P, const double *d_Br, const double *d_Bi,
+    double *d_grad, const double *d_Zr, const double *d_Zi, size_t K, size_t B_len, double H0)
+{
+  const size_t N = B_len / K;
+
+  double *d_Ar, *d_Ai;
+
+  checkCuda(cudaMalloc((void **)&d_Ar,  K * sizeof(double)));
+  checkCuda(cudaMalloc((void **)&d_Ai,  K * sizeof(double)));
+
+  double sin_delt, cos_delt;
+
+  sincos(delta, &sin_delt, &cos_delt);
+
+  int bs = (K + nT - 1) / nT; // cheap ceil
+  computeAlpha<<<bs, nT, 0>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
+
+  computeGrad<double><<<K, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, d_Zr, d_Zi, d_Ar, d_Ai, d_grad, N, K, H0, delta);
+
+  checkCuda(cudaFree(d_Ai));
+  checkCuda(cudaFree(d_Ar));
+}
+
 // TODO: Nice doc comments
 void gradH(double *phi_offsets, const double *Br, const double *Bi,
     double *grad, size_t K, size_t B_len)
 {
-  const size_t N = B_len / K;
+  // const int maxMem = 2147483648; // 2 GB
+  const int N = B_len / K;
 
-  vector<double> P(phi_offsets, phi_offsets + K);
+  // Solve for K:
+  // (4 * K + 2 * N + 2 * K * N) * sizeof(double);
+  // int K_prime = min(((maxMem / sizeof(double)) - 2 * N) / (4 + 2 * N), K);
 
   const int nStreams = (B_len > 8) ? 8 : 1;
   const int streamSize = B_len / nStreams;
@@ -251,12 +277,12 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   for (int i = 0; i < nStreams; ++i)
     checkCuda(cudaStreamCreate(&stream[i]));
 
-  double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi, *d_Ar, *d_Ai, *d_grad;
+  double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi, *d_grad;
 
   // TODO: Use pinned memory
   checkCuda(cudaMalloc((void **)&d_P,  K * sizeof(double)));
 
-  checkCuda(cudaMemcpyAsync(d_P, phi_offsets, K * sizeof(double), cudaMemcpyHostToDevice, 0));
+  checkCuda(cudaMemcpy(d_P, phi_offsets, K * sizeof(double), cudaMemcpyHostToDevice));
 
   // TODO: Use pinned memory
   checkCuda(cudaMalloc((void **)&d_Br, B_len * sizeof(double)));
@@ -264,9 +290,6 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
   checkCuda(cudaMalloc((void **)&d_Zr, N * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_Zi, N * sizeof(double)));
-
-  checkCuda(cudaMalloc((void **)&d_Ar,  K * sizeof(double)));
-  checkCuda(cudaMalloc((void **)&d_Ai,  K * sizeof(double)));
 
   checkCuda(cudaMalloc((void **)&d_grad, K * sizeof(double)));
 
@@ -282,21 +305,9 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   double H0 = H_not(d_P, d_Br, d_Bi, d_Zr, d_Zi, K, B_len, stream, nStreams, streamSize);
   PRINTF("Computed H_not\n");
 
-  // --------------------------------------------------------------------------
-  // Compute alpha
-  // --------------------------------------------------------------------------
+  gradH_priv(d_P, d_Br, d_Bi, d_grad, d_Zr, d_Zi, K, B_len, H0);
 
-  double sin_delt, cos_delt;
-
-  sincos(delta, &sin_delt, &cos_delt);
-
-  int bs = (K + nT - 1) / nT; // cheap ceil
-  computeAlpha<<<bs, nT>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
-
-  computeGrad<double><<<K, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, d_Zr, d_Zi, d_Ar,
-      d_Ai, d_grad, N, K, H0, delta);
-
-  checkCuda(cudaMemcpyAsync(grad, d_grad, K * sizeof(double), cudaMemcpyDeviceToHost, 0));
+  checkCuda(cudaMemcpy(grad, d_grad, K * sizeof(double), cudaMemcpyDeviceToHost));
 
   checkCuda(cudaFree(d_Br));
   checkCuda(cudaFree(d_Bi));
@@ -305,8 +316,6 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   checkCuda(cudaFree(d_Zi));
 
   checkCuda(cudaFree(d_P));
-  checkCuda(cudaFree(d_Ai));
-  checkCuda(cudaFree(d_Ar));
 
   for (int i = 0; i < nStreams; ++i)
     checkCuda(cudaStreamDestroy(stream[i]));
