@@ -180,8 +180,7 @@ __global__ void computeAlpha(const double *P, double sin_delt, double cos_delt,
 
 // Returns the entropy of the complex image `Z`
 double H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
-    *Zi, size_t K, size_t B_len, cudaStream_t *stream, int nStreams, int
-    streamSize)
+    *Zi, size_t K, size_t B_len)
 {
   size_t N = B_len / K;
   double entropy(0);
@@ -192,13 +191,7 @@ double H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
 
   checkCuda(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
 
-  for (int i = 0; i < nStreams; ++i) {
-    int offset = i * streamSize;
-    int Z_offset = i * (N / nStreams);
-
-    kernelSum<double><<<N / nStreams, nT, 2 * nT * sizeof(double),
-      stream[i]>>>(&d_Br[offset], &d_Bi[offset], &Zr[Z_offset], &Zi[Z_offset], K, &d_Z_mag[Z_offset], d_P);
-  }
+  kernelSum<double><<<N, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, Zr, Zi, K, d_Z_mag, d_P);
 
   cudaDeviceSynchronize();
 
@@ -269,14 +262,6 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   // (4 * K + 2 * N + 2 * K * N) * sizeof(double);
   // int K_prime = min(((maxMem / sizeof(double)) - 2 * N) / (4 + 2 * N), K);
 
-  const int nStreams = (B_len > 8) ? 8 : 1;
-  const int streamSize = B_len / nStreams;
-
-  cudaStream_t stream[nStreams];
-
-  for (int i = 0; i < nStreams; ++i)
-    checkCuda(cudaStreamCreate(&stream[i]));
-
   double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi, *d_grad;
 
   // TODO: Use pinned memory
@@ -293,16 +278,12 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
   checkCuda(cudaMalloc((void **)&d_grad, K * sizeof(double)));
 
-  for (int i = 0; i < nStreams; ++i) {
-    int offset = i * streamSize;
-
-    checkCuda(cudaMemcpyAsync(&d_Br[offset], &Br[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
-    checkCuda(cudaMemcpyAsync(&d_Bi[offset], &Bi[offset], streamSize * sizeof(double), cudaMemcpyHostToDevice, stream[i]));
-  }
+  checkCuda(cudaMemcpy(d_Br, Br, B_len * sizeof(double), cudaMemcpyHostToDevice));
+  checkCuda(cudaMemcpy(d_Bi, Bi, B_len * sizeof(double), cudaMemcpyHostToDevice));
 
   PRINTF("In gradH, about to compute Z\n");
   PRINTF("Computed Z\n");
-  double H0 = H_not(d_P, d_Br, d_Bi, d_Zr, d_Zi, K, B_len, stream, nStreams, streamSize);
+  double H0 = H_not(d_P, d_Br, d_Bi, d_Zr, d_Zi, K, B_len);
   PRINTF("Computed H_not\n");
 
   gradH_priv(d_P, d_Br, d_Bi, d_grad, d_Zr, d_Zi, K, B_len, H0);
@@ -316,7 +297,4 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   checkCuda(cudaFree(d_Zi));
 
   checkCuda(cudaFree(d_P));
-
-  for (int i = 0; i < nStreams; ++i)
-    checkCuda(cudaStreamDestroy(stream[i]));
 }

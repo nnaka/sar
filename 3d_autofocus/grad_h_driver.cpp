@@ -15,7 +15,7 @@ double drand() {
 
 int main() {
     const size_t K     = 10000;
-    const size_t B_len = K * 50 * 50 * 50;
+    const size_t B_len = K * 22 * 22 * 22;
 
     double *pr = new double[K];
     double *pi = new double[K];
@@ -40,9 +40,9 @@ int main() {
         printf("Iteration %d\n", i);
         gradH(pi, Br, Bi, grad, K, B_len);
 
-        // for (size_t i(0); i < K; ++i) {
-        //     printf("grad[%lu]=%f\n", i, grad[i]);
-        // }
+        for (size_t i(K - 10); i < K; ++i) {
+            printf("grad[%lu]=%f\n", i, grad[i]);
+        }
     }
 
     delete[] pr;
