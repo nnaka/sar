@@ -20,7 +20,7 @@ save(strcat(filename, '_image_BRUTE.mat'), 'focusedImageBrute', '-v7.3')
 tic
 [focusedImageC, minEntropyC, maxEntropyC] = minEntropyGradientC(imageSet);
 et2 = toc;
-save(strcat(filename, '_image_GRADIENT_C.mat'), 'focusedImage', '-v7.3')
+save(strcat(filename, '_image_GRADIENT_C.mat'), 'focusedImageC', '-v7.3')
 
 tic
 [focusedImageMatlab, minEntropyMatlab, maxEntropyMatlab] = minEntropyGradientMatlab(imageSet);
