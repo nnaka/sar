@@ -40,7 +40,7 @@ __host__ __device__ inline double entropy(double acc, double Ez)
 
 // B is a matrix with K columns and N rows
 template<typename T>
-__global__ void computeGrad(const T * __restrict__ Br, const T * __restrict__ Bi, 
+__global__ void computeEz(const T * __restrict__ Br, const T * __restrict__ Bi, 
     const T * __restrict__ Zr, const T * __restrict__ Zi,
     const T * __restrict__ Ar, const T * __restrict__ Ai,
     T * __restrict__ g_Ez, T * __restrict__ g_acc, size_t N, size_t K)
@@ -176,6 +176,15 @@ __global__ void computeAlpha(const double *P, double sin_delt, double cos_delt,
   }
 }
 
+__global__ void computeGrad(double *grad, const double *acc, const double *Ez, double H0, double delta, size_t K)
+{
+  unsigned int k = blockIdx.x*blockDim.x + threadIdx.x;
+
+  if (k < K) {
+    grad[k] = (-entropy(acc[k], Ez[k]) - H0) / delta;
+  }
+}
+
 // Returns the entropy of the complex image `Z`
 void H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
     *Zi, double *Ez, double *acc, size_t K, size_t B_len)
@@ -218,30 +227,6 @@ void H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
   cublasDestroy(handle);
 }
 
-void gradH_priv(double *d_P, const double *d_Br, const double *d_Bi,
-    double *d_Ez, double *d_acc, const double *d_Zr, const double *d_Zi, size_t K, size_t B_len)
-{
-  const size_t N = B_len / K;
-
-  double *d_Ar, *d_Ai;
-
-  checkCuda(cudaMalloc((void **)&d_Ar,  K * sizeof(double)));
-  checkCuda(cudaMalloc((void **)&d_Ai,  K * sizeof(double)));
-
-  double sin_delt, cos_delt;
-
-  sincos(delta, &sin_delt, &cos_delt);
-
-  // TODO: A does not need to be calculated multiple times
-  int bs = (K + nT - 1) / nT; // cheap ceil
-  computeAlpha<<<bs, nT, 0>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
-
-  computeGrad<double><<<K, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, d_Zr, d_Zi, d_Ar, d_Ai, d_Ez, d_acc, N, K);
-
-  checkCuda(cudaFree(d_Ar));
-  checkCuda(cudaFree(d_Ai));
-}
-
 // TODO: Nice doc comments
 void gradH(double *phi_offsets, const double *Br, const double *Bi,
     double *grad, size_t K, size_t B_len)
@@ -254,8 +239,7 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   size_t N_prime = min((maxMem / sizeof(double) - 4 * K - 2 * N) / (2 * K), N);
   size_t B_len_prime = N_prime * K;
 
-  double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi;
-  double *d_Ez, *d_acc;
+  double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi, *d_Ez, *d_acc, *d_Ar, *d_Ai, *d_grad;
   double Ez = 0, acc = 0;
 
   // TODO: Use pinned memory
@@ -268,11 +252,20 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   checkCuda(cudaMalloc((void **)&d_Br, B_len_prime * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_Bi, B_len_prime * sizeof(double)));
 
+  checkCuda(cudaMalloc((void **)&d_Ar,  K * sizeof(double)));
+  checkCuda(cudaMalloc((void **)&d_Ai,  K * sizeof(double)));
+
   checkCuda(cudaMalloc((void **)&d_Ez, K * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_acc, K * sizeof(double)));
 
+  checkCuda(cudaMalloc((void **)&d_grad, K * sizeof(double)));
+
   checkCuda(cudaMemset(d_Ez, 0, K * sizeof(double)));
   checkCuda(cudaMemset(d_acc, 0, K * sizeof(double)));
+
+  double sin_delt, cos_delt;
+  sincos(delta, &sin_delt, &cos_delt);
+  computeAlpha<<<(K + nT - 1) / nT, nT, 0>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
 
   PRINTF("In gradH, about to compute Z\n");
   PRINTF("Computed Z\n");
@@ -287,21 +280,14 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
     checkCuda(cudaMemcpy(d_Bi, &Bi[i * B_len_prime], len * sizeof(double), cudaMemcpyHostToDevice));
 
     H_not(d_P, d_Br, d_Bi, &d_Zr[i * N_prime], &d_Zi[i * N_prime], &Ez, &acc, K, len);
-    gradH_priv(d_P, d_Br, d_Bi, d_Ez, d_acc, &d_Zr[i * N_prime], &d_Zi[i * N_prime], K, len);
+    computeEz<double><<<K, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, &d_Zr[i * N_prime], &d_Zi[i * N_prime], d_Ar, d_Ai, d_Ez, d_acc, len / K, K);
   }
 
   double H0 = -entropy(acc, Ez);
   PRINTF("Computed H_not=%f\n", H0);
 
-  double *Ez_arr = new double[K];
-  double *acc_arr = new double[K];
-
-  checkCuda(cudaMemcpy(Ez_arr, d_Ez, K * sizeof(double), cudaMemcpyDeviceToHost));
-  checkCuda(cudaMemcpy(acc_arr, d_acc, K * sizeof(double), cudaMemcpyDeviceToHost));
-
-  for (size_t k(0); k < K; ++k) {
-    grad[k] = (-entropy(acc_arr[k], Ez_arr[k]) - H0) / delta;
-  }
+  computeGrad<<<(K + nT - 1) / nT, nT>>>(d_grad, d_acc, d_Ez, H0, delta, K);
+  checkCuda(cudaMemcpy(grad, d_grad, K * sizeof(double), cudaMemcpyDeviceToHost));
 
   checkCuda(cudaFree(d_Br));
   checkCuda(cudaFree(d_Bi));
@@ -311,6 +297,8 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
   checkCuda(cudaFree(d_P));
 
-  delete[] Ez_arr;
-  delete[] acc_arr;
+  checkCuda(cudaFree(d_Ar));
+  checkCuda(cudaFree(d_Ai));
+
+  checkCuda(cudaFree(d_grad));
 }
