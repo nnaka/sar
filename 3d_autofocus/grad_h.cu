@@ -246,15 +246,16 @@ void gradH_priv(double *d_P, const double *d_Br, const double *d_Bi,
 void gradH(double *phi_offsets, const double *Br, const double *Bi,
     double *grad, size_t K, size_t B_len)
 {
-  const auto maxMem = 2147483648 / 1024; // 2 GB
+  const auto maxMem = 2147483648 / 2; // 1 GB - size of half of GPU physical memory
   const size_t N = B_len / K;
 
   // Solve for N:
-  // (4 * K + 2 * N + 2 * K * N) * sizeof(double);
-  size_t N_prime = min(((maxMem - 4 * K) / (2 + 2 * K)) * sizeof(double), N);
+  // (4 * K + 2 * N + 2 * K * N_prime) * sizeof(double);
+  size_t N_prime = min((maxMem / sizeof(double) - 4 * K - 2 * N) / (2 * K), N);
   size_t B_len_prime = N_prime * K;
 
   double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi;
+  double *d_Ez, *d_acc;
   double Ez = 0, acc = 0;
 
   // TODO: Use pinned memory
@@ -266,6 +267,12 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
   checkCuda(cudaMalloc((void **)&d_Br, B_len_prime * sizeof(double)));
   checkCuda(cudaMalloc((void **)&d_Bi, B_len_prime * sizeof(double)));
+
+  checkCuda(cudaMalloc((void **)&d_Ez, K * sizeof(double)));
+  checkCuda(cudaMalloc((void **)&d_acc, K * sizeof(double)));
+
+  checkCuda(cudaMemset(d_Ez, 0, K * sizeof(double)));
+  checkCuda(cudaMemset(d_acc, 0, K * sizeof(double)));
 
   PRINTF("In gradH, about to compute Z\n");
   PRINTF("Computed Z\n");
@@ -280,29 +287,11 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
     checkCuda(cudaMemcpy(d_Bi, &Bi[i * B_len_prime], len * sizeof(double), cudaMemcpyHostToDevice));
 
     H_not(d_P, d_Br, d_Bi, &d_Zr[i * N_prime], &d_Zi[i * N_prime], &Ez, &acc, K, len);
+    gradH_priv(d_P, d_Br, d_Bi, d_Ez, d_acc, &d_Zr[i * N_prime], &d_Zi[i * N_prime], K, len);
   }
 
   double H0 = -entropy(acc, Ez);
   PRINTF("Computed H_not=%f\n", H0);
-
-  double *d_Ez, *d_acc;
-
-  checkCuda(cudaMalloc((void **)&d_Ez, K * sizeof(double)));
-  checkCuda(cudaMalloc((void **)&d_acc, K * sizeof(double)));
-
-  checkCuda(cudaMemset(d_Ez, 0, K * sizeof(double)));
-  checkCuda(cudaMemset(d_acc, 0, K * sizeof(double)));
-
-  for (size_t i(0); i < num_iter; ++i)
-  {
-    size_t len = min(B_len_prime, B_len - i * B_len_prime);
-
-    checkCuda(cudaMemcpy(d_Br, &Br[i * B_len_prime], len * sizeof(double), cudaMemcpyHostToDevice));
-    checkCuda(cudaMemcpy(d_Bi, &Bi[i * B_len_prime], len * sizeof(double), cudaMemcpyHostToDevice));
-
-    // TODO: Move to upper loop w/ assertion that N_prime > K
-    gradH_priv(d_P, d_Br, d_Bi, d_Ez, d_acc, &d_Zr[i * N_prime], &d_Zi[i * N_prime], K, len);
-  }
 
   double *Ez_arr = new double[K];
   double *acc_arr = new double[K];
