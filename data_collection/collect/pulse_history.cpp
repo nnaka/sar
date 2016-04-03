@@ -1,6 +1,7 @@
 #include "pulse_history.h"
 #include <iostream>
 #include <stdlib.h>
+#include <stdint.h>
 
 using namespace std;
 
@@ -23,8 +24,16 @@ void PulseHistory::collect() {
     for (int i = 0; i < pulsesPerLoc; ++i) {
         radar.collect(info);
     }
-  
-    cout << "\n\n ========== Radar Stand Alone Data ========\n\n"
+
+    cout << "starting scan: \n";
+
+    for (int i = 0; i < info.msg.scanInfo.numSamplesTotal; i++) {
+        cout << info.scan[i]  << ", ";
+    }
+
+    cout << "\n\n";
+        /*
+   cout << "\n\n ========== Radar Stand Alone Data ========\n\n"
          << "Radar data: "          << info.msg.scanInfo.scan                   << "; \n"
          << "NumSamples: "          << info.msg.scanInfo.numSamplesTotal        << "; \n"
          << "SourceID: "            << info.msg.scanInfo.sourceId               << "; \n"
@@ -41,7 +50,7 @@ void PulseHistory::collect() {
          << "Height: "              << pos_info.height                          << "; \n"
          << "GPS week: "            << gps_info.wn                              << "; \n"
          << "GPS time: "            << gps_info.tow                             << "; \n\n";
-
+*/
 }
 
 
@@ -59,3 +68,25 @@ void PulseHistory::collect() {
 // pulseIntegrationIndex;
 // operationMode - not used;
 // scanIntervalTime_ms - not used
+
+/*
+
+ cout << "\n\n ========== Radar Stand Alone Data ========\n\n"
+ << "Radar data: "          << info.msg.scanInfo.scan                   << "; \n"
+ << "NumSamples: "          << info.msg.scanInfo.numSamplesTotal        << "; \n"
+ << "SourceID: "            << info.msg.scanInfo.sourceId               << "; \n"
+ << "scanStartPS: "         << info.msg.scanInfo.scanStartPs            << "; \n"
+ << "scanStopPS: "          << info.msg.scanInfo.scanStopPs             << "; \n"
+ << "scanStepBins: "        << info.msg.scanInfo.scanStepBins           << "; \n"
+ << "transmitGain: "        << 63                                       << "; \n"     // from txGain
+ << "codeChannel: "         << 0                                        << "; \n"     // from codeChannel
+ << "pii: "                 << 12                                       << "; \n";  // from base integration index
+ 
+ cout << "\n ========== GPS Stand Alone Data ==========\n\n"
+ << "Position x: "          << pos_info.lat                             << "; \n"
+ << "Position y: "          << pos_info.lon                             << "; \n"
+ << "Height: "              << pos_info.height                          << "; \n"
+ << "GPS week: "            << gps_info.wn                              << "; \n"
+ << "GPS time: "            << gps_info.tow                             << "; \n\n";
+
+*/
