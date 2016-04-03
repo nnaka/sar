@@ -39,9 +39,14 @@ Without logging: `make no-debug`
 ## Usage
 
 ```shell
+client <host> <port>
 collect <port> <gps_port> <radar_port>
 ```
 
 Here, `port` is the port to which the client connects, `gps_port` is the `tty`
 path to the USB on which the GPS will communicate, and `radar_port` is similarly
 the USB on which the radar will communicate.
+
+NOTE: When inside be sure to put the Piksi in simulation mode via the Piksi
+Console GUI. Navigate to "Settings" and click on the sidemenu item "Simulation".
+Make sure to set "Enable" to true.
