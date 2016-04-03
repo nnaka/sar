@@ -97,10 +97,11 @@ void Piksi::collect(msg_pos_llh_t &pos, msg_gps_time_t &gps) {
         ret = sbp_process(&s, &piksi_port_read);
     } while (ret >= 0 && callbacks_rcvd < NUM_CALLBACKS - 1);
 
-    check_or_exit(ret < 0, "sbp_process error");
-
     callbacks_rcvd = 0;
 
-    pos = pos_llh;
-    gps = gps_time;
+    if (ret >= 0) {
+        pos = pos_llh;
+        gps = gps_time;
+    }
+    else LOG("sbp_process error code %d", ret);
 }
