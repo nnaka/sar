@@ -50,3 +50,22 @@ the USB on which the radar will communicate.
 NOTE: When inside be sure to put the Piksi in simulation mode via the Piksi
 Console GUI. Navigate to "Settings" and click on the sidemenu item "Simulation".
 Make sure to set "Enable" to true.
+
+## SSH to Hummingboard
+
+1) Turning on the Hummingboard starts an ad hoc WiFi network 'SAR-PROJECT' -- wait a few
+minutes and join this on your computer
+2) Configure your network settings to use IP address 192.168.0.2 with a subnet
+mask of 255.255.255.0.
+3) SSH to the Hummingboard at IP address 192.168.0.1 via:
+
+```shell
+ssh root@192.168.0.1
+```
+
+The password is 'modelthegaussian' (no quotes).
+
+## Misc
+
+The top USB port on the Hummingboard is named `/dev/ttyUSB0`, the bottom
+`/dev/ttyACM0`.

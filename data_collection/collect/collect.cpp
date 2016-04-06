@@ -10,7 +10,7 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include <string>
+#include <string.h>
 #include <unistd.h> // close
 
 #include <sys/socket.h>

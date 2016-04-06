@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 #include <iostream>
-#include <string>
+#include <string.h>
 
 #include <unistd.h>     // write
 #include <sys/socket.h>
