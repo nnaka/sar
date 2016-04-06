@@ -12,6 +12,7 @@ const char * c_str(Message msg) {
     switch (msg) {
         case START_COLLECT: return "START_COLLECT";
         case STOP_COLLECT:  return "STOP_COLLECT";
+        case CLOSE_SOCKET:    return "CLOSE_SOCKET";
         default:
                             LOG("Bad message recieved: %d.", msg);
                             exit(1);

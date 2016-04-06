@@ -70,17 +70,34 @@ int main(int argc, char *argv[]) {
                 sizeof(server_addr)), "connect");
 
     LOG("connected on fd = %d", fd);
-
-    cout << "Press ENTER to start collection";
+    
+    // Determine the number of scans to take
+    // TODO: add error checking to ensure only
+    // integers are entered for num_scans
+    int num_scans = 0;
+    int count = 0;
+    
+    cout << "How many scans do you want to take?\n";
+    cin >> num_scans;
     cin.ignore();
+    cout << "Number of scans: " << num_scans << "\n";
+    
+    while(count < num_scans) {
+        cout << "Scan " << count + 1 << " of " << num_scans << endl;
+        cout << "Press ENTER to start collection";
+        cin.ignore();
 
-    write_message(fd, START_COLLECT);
+        write_message(fd, START_COLLECT);
 
-    cout << "Press ENTER to stop collection";
-    cin.ignore();
+        cout << "Press ENTER to stop collection";
+        cin.ignore();
  
-    write_message(fd, STOP_COLLECT);
+        write_message(fd, STOP_COLLECT);
+        count++;
+        
+    }
 
+    write_message(fd, CLOSE_SOCKET);
     close(fd);
 
     return 0;

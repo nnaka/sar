@@ -4,7 +4,7 @@
 //
 // NOTE: All functions in this interface may `exit(1)` in the event of error.
 
-enum Message { START_COLLECT, STOP_COLLECT };
+enum Message { START_COLLECT, STOP_COLLECT, CLOSE_SOCKET };
 
 // Writes `msg` to `fd`
 //

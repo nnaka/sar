@@ -33,8 +33,8 @@ PulsOn::PulsOn(const string & radioAddr) :
     // config and status strucs
     mrmMsg_GetStatusInfoConfirm statusInfo;
 
-	// announce to the world
-	LOG("%s", "MRM Sample App");
+    // announce to the world
+    LOG("%s", "MRM Sample App");
 
     // Now print out what we are doing
     LOG("Radio address: %s (USB)", radioAddr.c_str());
@@ -47,7 +47,7 @@ PulsOn::PulsOn(const string & radioAddr) :
     // TODO: (joshpfosi) Memory leak (see top of file)
     // make sure radio is in active mode
     check_or_exit(mrmSleepModeGet(&mode) != OK,
-            "Time out waiting for sleep mode");
+           "Time out waiting for sleep mode");
 
 	// print sleep mode
     LOG("Radio sleep mode is %d", mode);
@@ -73,19 +73,19 @@ PulsOn::PulsOn(const string & radioAddr) :
     check_or_exit(mrmConfigGet(&config) != 0,
             "Time out waiting for config confirm");
 
-	// modify config with user inputs
-	config.scanStartPs          = userScanStart;
-	config.scanEndPs            = userScanStop;
-	config.baseIntegrationIndex = userBaseII;
-	config.txGain               = userTxGain;
+    // modify config with user inputs
+    config.scanStartPs          = userScanStart;
+    config.scanEndPs            = userScanStop;
+    config.baseIntegrationIndex = userBaseII;
+    config.txGain               = userTxGain;
     config.codeChannel          = userCodeChannel;
-	config.antennaMode          = userAntennaMode;
-	config.scanResolutionBins   = userScanResolutionBins;
+    config.antennaMode          = userAntennaMode;
+    config.scanResolutionBins   = userScanResolutionBins;
 
     // TODO: (joshpfosi) Memory leak (see top of file)
-	// write updated config to radio
-	check_or_exit(mrmConfigSet(&config) != 0,
-            "Time out waiting for set config confirm");
+    // write updated config to radio
+    check_or_exit(mrmConfigSet(&config) != 0,
+	"Time out waiting for set config confirm");
 
     // print out configuration
     LOG("%s", "Configuration:");

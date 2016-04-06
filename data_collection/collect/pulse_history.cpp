@@ -27,10 +27,23 @@ void PulseHistory::collect() {
 
     cout << "starting scan: \n";
 
-    for (int i = 0; i < info.msg.scanInfo.numSamplesTotal; i++) {
+    for (unsigned int i = 0; i < info.msg.scanInfo.numSamplesTotal; i++) {
         cout << info.scan[i]  << ", ";
     }
-
+    
+    cout << 1                                   << ", ";    // sentinal value to determine where scan data ends
+    
+    cout << pos_info.lat                        << ", "
+         << pos_info.lon                        << ", "
+         << pos_info.height                     << ", "
+         << info.msg.scanInfo.sourceId          << ", "
+         << info.msg.scanInfo.scanStartPs       << ", "
+         << info.msg.scanInfo.scanStopPs        << ", "
+         << info.msg.scanInfo.scanStepBins      << ", "
+         << 63                                  << ", "
+         << 0                                   << ", "
+         << 12                                  << ", ";
+    
     cout << "\n\n";
         /*
    cout << "\n\n ========== Radar Stand Alone Data ========\n\n"
