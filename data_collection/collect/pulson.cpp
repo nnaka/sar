@@ -19,7 +19,7 @@ const auto C = 299792458; // speed of light
 
 PulsOn::PulsOn(const string & radioAddr) :
     userScanStart(DEFAULT_SCAN_START),
-    userScanStop(userScanStart + (2 * DEFAULT_MAX_DISTANCE / C) * 1e12),
+    userScanStop(userScanStart + (2 * (float)DEFAULT_MAX_DISTANCE / C) * 1e12),
 	userBaseII(DEFAULT_BASEII),
     userTxGain(DEFAULT_TX_GAIN),
     userCodeChannel(DEFAULT_CODE_CHANNEL),
