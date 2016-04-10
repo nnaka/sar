@@ -81,6 +81,8 @@ int main(int argc, char *argv[]) {
     }
 
     int sock = setup_connection(atoi(argv[1]));
+
+    PulseHistory ph(argv[2], argv[3]);
     
     int scan_num = 1;
     
@@ -88,19 +90,16 @@ int main(int argc, char *argv[]) {
         wait_for(sock, START_COLLECT);
         
         std::cout << "\n\nScan " << scan_num << "\n\n";
-        
-        PulseHistory ph(argv[2], argv[3]);
 
         do { ph.collect(); } while (!check_for(sock, STOP_COLLECT));
-        
+
+        // TODO: (joshpfosi) Print ph
+
+        // std::cout << ph.PulseHistory;
+
         scan_num++;
-    
     } while (!check_for(sock, CLOSE_SOCKET));
              
-    // TODO: (joshpfosi) Print ph
-    
-    // std::cout << ph.PulseHistory;
-    
     close(sock);
 
     return 0;
