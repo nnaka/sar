@@ -25,8 +25,6 @@ void PulseHistory::collect() {
         radar.collect(info);
     }
 
-    cout << "starting scan: \n";
-
     for (unsigned int i = 0; i < info.msg.scanInfo.numSamplesTotal; i++) {
         cout << info.scan[i]  << ", ";
     }

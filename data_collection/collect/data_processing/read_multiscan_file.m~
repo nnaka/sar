@@ -1,0 +1,41 @@
+function [raw_scan, gps_data] = read_multiscan_file(file_name)
+% reads a file with multiple scans to create a 3D radar scan array
+%
+% 1st Dimension: scan values and GPS data
+% 2nd Dimension: every scan in the given row
+% 3rd Dimension: every row in the data set
+
+
+raw_data = str2double(read_mixed_csv(file_name, ','));
+dim = size(raw_data);
+num_rows = raw_data(dim(1), 1);
+
+% split the data by row
+curr_row = 1;
+while curr_row <= num_rows
+    idx = 2;                % we know that row 2 is start of first row
+    curr_scan = 1;
+    if isnan(raw_data(idx,1))
+        curr_row = curr_row + 1;
+        idx = idx + 1;
+        curr_scan = 1;
+    end 
+    
+    raw_data(curr_scan
+end 
+
+
+for i = 2:dim(1)
+   
+    if isnan(raw_data(i,1))
+        curr_row = curr_row + 1;
+    end
+    
+    row_data(i,:,curr_row) = raw_data(i,:);
+end 
+
+data_size = size(data);
+
+% separate radar data 
+raw_scan = data(1:data_size(1),1:end-12);
+gps_data = data(1:data_size(1),(end-3):end);

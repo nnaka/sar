@@ -84,12 +84,12 @@ int main(int argc, char *argv[]) {
 
     PulseHistory ph(argv[2], argv[3]);
     
-    int scan_num = 1;
+    int row_num = 1;
     
     do {
         wait_for(sock, START_COLLECT);
         
-        std::cout << "\n\nScan " << scan_num << "\n\n";
+        std::cout << "Row " << row_num << ",\n\n";
 
         do { ph.collect(); } while (!check_for(sock, STOP_COLLECT));
 
@@ -97,8 +97,11 @@ int main(int argc, char *argv[]) {
 
         // std::cout << ph.PulseHistory;
 
-        scan_num++;
+        row_num++;
     } while (!check_for(sock, CLOSE_SOCKET));
+    
+    int end_file = -1;                          // signifies end of file for
+    std::cout << row_num-1 << "\n" << end_file;   // Matlab csv read file script
              
     close(sock);
 
