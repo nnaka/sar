@@ -1,6 +1,10 @@
 function [rawCollect] = formatData(rawscan, gps_data, scan_dim, ... 
                                    scanResPs, C_mps, scanIntervalTime_ms)
 
+if numel(scan_dim) == 2
+    scan_dim = horzcat(scan_dim, 1);
+end 
+                               
 rawCollect = cell(scan_dim(3), scan_dim(1));
 for i = 1:scan_dim(3)
         for j = 1:scan_dim(1)

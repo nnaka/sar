@@ -4,7 +4,7 @@ addpath('../data');
 
 % File parameters 
 rp_file = 'radar_param';
-scan_file = 'multi_row_test';
+scan_file = 'single_row_test';
 
 
 % TODO 
@@ -62,7 +62,13 @@ end
 
 % create a 3D or 2D image depending on the size of the data set
 if numel(scan_dim) == 3
-    image_set = SAR_3D(rawCollect);
+    img_size = [50 50 50];
+    scene_size = [10, maxDistance_m, 10];
+    form_pulse_set = false;
+    image_set = SAR_3D(rawCollect, img_size, scene_size, form_pulse_set);
+    
+    dB = 10;
+    ViewCube(image_set,dB);
 else 
     % define scene size
     height = 0.3810;                            % aperture height

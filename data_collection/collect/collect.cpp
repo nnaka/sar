@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
     } while (!check_for(sock, CLOSE_SOCKET));
     
     int end_file = -1;                          // signifies end of file for
-    std::cout << row_num-1 << "\n" << end_file;   // Matlab csv read file script
+    std::cout << (row_num-1) << "\n" << end_file;   // Matlab csv read file script
              
     close(sock);
 
