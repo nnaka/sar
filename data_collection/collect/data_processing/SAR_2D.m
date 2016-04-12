@@ -8,7 +8,6 @@ ovsFac = 4;                  % Oversampling factor applied when interpolating
 angleLimit_deg = 90;         % Angular limit of the SAR image to form (each side)
 rngWindowEnable = true;      % Window applied to reduce range sidelobes
 rangeScaleFac = 3/2;         % Normalize by r^rangeScaleFac
-ampFilter = 2e+7;            % Amplitude to filter below
 
 % Static parameters
 C_mps = 299792458;                                  % (m/s) Speed of light
@@ -23,7 +22,6 @@ sceneSizeY = sceneSize(2);
 %sceneSizeY = sceneSizeX * 3/4;                     % Aspect ratio for 640 x 480 grid
 
 imgX = linspace(-sceneSizeX/2,sceneSizeX/2,641).';  % (m) Image pixels in x-dim
-% imgX = linspace(0,sceneSizeX,641).';
 imgY = linspace(0,sceneSizeY,481).'; 
 imgZ = sceneSize(3);                                % (m) Altitude of 2-D backprojection image
 %% Initialize Output Display
@@ -44,12 +42,14 @@ end
 %% Override GPS position data if requested 
 if GPS_override
     aperture_len = scan_incriment * numScans;
-    xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
+%     xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
+    xLoc = linspace(-(0.015*length(rawCollect))/2,(0.015*length(rawCollect))/2,length(rawCollect));
+
     for i=1:length(rawCollect)
 %         rawCollect{i}.xLoc_m = (-scan_incriment*(i-1));
-        rawCollect{i}.xLoc_m = xLoc(i);
+        rawCollect{i}.xLoc_m = xLoc(end-i+1);
         rawCollect{i}.yLoc_m = 0;
-        rawCollect{i}.zLoc_m = imgZ;      % maybe???
+        rawCollect{i}.zLoc_m = 0;      % maybe???
     end
 end
 
@@ -80,7 +80,6 @@ end
 %% Process Scans
 
 fprintf('Processing scans...\n');
-count = 0;
 
 pulseSet = zeros(numel(imgY),numel(imgX),numScans);
 for scanIdx = 1:numScans

@@ -4,7 +4,7 @@ addpath('../data');
 
 % File parameters 
 rp_file = 'radar_param';
-scan_file = 'single_row_test';
+scan_file = 'sundayTestRow1';
 
 
 % TODO 
@@ -38,7 +38,9 @@ scanResPs = scanStepBins*1.907;          % 61 ps sampling resolution
 scanCount = 1;              % number of scans per spatial location (2^16-1 for continuous)    
 
 %% Read Radar Data From File
-[raw_scan, gps_data] = read_multiscan_file(scan_file);
+% [raw_scan, gps_data] = read_multiscan_file(scan_file);
+
+[raw_scan, gps_data] = read_scan_file(scan_file);
 scan_dim = size(raw_scan);               % [num_scans bins_per_scan]
 
 %% Plot Raw Radar Data 
@@ -46,7 +48,7 @@ plotRawScan(raw_scan, scan_dim, scanResPs, C_mps);
 
 %% Format Raw Radar Data
 rawCollect = formatData(raw_scan, gps_data, scan_dim, ...
-                        C_mps, scanResPs,scanIntervalTime_ms);
+                        scanResPs, C_mps, scanIntervalTime_ms);
 
 %% Process Raw Radar Data
 display_image = true;                   % display image during processing?
@@ -72,12 +74,12 @@ if numel(scan_dim) == 3
 else 
     % define scene size
     height = 0.3810;                            % aperture height
-    sceneSizeX = 10;
+    sceneSizeX = 20;
     sceneSizeY = maxDistance_m;
     sceneSize = [sceneSizeX sceneSizeY height]; % [X Y Z]
     
     % create 1D backprojection image of radar scene
-    processScan(rawCollect, ovsFac, C_mps, rangeScaleFac);
+%     processScan(rawCollect, ovsFac, C_mps, rangeScaleFac);
     
     % create 2D backprojection image of radar scene
     image_set = SAR_2D(rawCollect, sceneSize, display_image,...
