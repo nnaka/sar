@@ -21,6 +21,8 @@
 
 #include "pulse_history.h"
 
+using namespace std;
+
 /*
  * TODO
  *
@@ -93,15 +95,15 @@ int main(int argc, char *argv[]) {
 
         do { ph.collect(); } while (!check_for(sock, STOP_COLLECT));
 
-        // TODO: (joshpfosi) Print ph
+        cout << ph;
 
-        // std::cout << ph.PulseHistory;
+        ph.clearHistory();
 
         row_num++;
     } while (!check_for(sock, CLOSE_SOCKET));
     
     int end_file = -1;                          // signifies end of file for
-    std::cout << (row_num-1) << "\n" << end_file;   // Matlab csv read file script
+    cout << (row_num-1) << "\n" << end_file;   // Matlab csv read file script
              
     close(sock);
 

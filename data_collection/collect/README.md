@@ -20,7 +20,7 @@ Required: SwiftNav Binary Protocol (SBP) library
 Instructions here: https://swift-nav.github.io/libsbp/c/build/docs/html/install.html
 
 Required: `libserialport`
-Insturctions here: https://sigrok.org/wiki/Libserialport
+Instructions here: https://sigrok.org/wiki/Libserialport
 
 ```shell
 git clone git://sigrok.org/libserialport
@@ -39,8 +39,8 @@ Without logging: `make no-debug`
 ## Usage
 
 ```shell
-client <host> <port>
 collect <port> <gps_port> <radar_port>
+client <host> <port>
 ```
 
 Here, `port` is the port to which the client connects, `gps_port` is the `tty`

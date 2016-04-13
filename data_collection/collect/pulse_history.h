@@ -14,6 +14,9 @@ class PulseHistory {
     public:
         PulseHistory(const std::string &, const std::string &);
         void collect();
+        void clearHistory();
+        friend std::ostream& operator<<(std::ostream& os,
+                const PulseHistory& ph);
     private:
         Piksi gps;
         PulsOn radar;
