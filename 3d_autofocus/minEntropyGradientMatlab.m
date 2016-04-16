@@ -87,7 +87,7 @@ function [ grad ] = gradH( phi_offsets, B )
     K = numel(phi_offsets);
     grad = zeros(1, K);
 
-    delta = 1; % arbitrary constant for finite difference
+    delta = 0.001; % arbitrary constant for finite difference
 
     % k x k identity matrix in MATLAB
     ident = eye(K);
