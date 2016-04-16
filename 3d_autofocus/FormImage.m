@@ -35,13 +35,13 @@ function [] = FormImage( filename )
 % so long as each point has an [X Y Z] coordinate, there can be any number
 % of points in any arrangement that you choose...have fun!
 
-% x0=kron((-20:20:20)',ones(3,1));     
-% y0=kron(ones(3,1),(-20:20:20)');
-% z0=[0;30;-30;30;0;-30;30;-30;0];
+x0=kron((-20:20:20)',ones(3,1));     
+y0=kron(ones(3,1),(-20:20:20)');
+z0=[0;30;-30;30;0;-30;30;-30;0];
 
-x0 = 10;
-y0 = 10;
-z0 = 10;
+% x0 = 10;
+% y0 = 10;
+% z0 = 10;
 
 % x0 = linspace(-5,5,100)';
 % y0 = zeros(numel(x0),1);
@@ -58,7 +58,7 @@ z0 = 10;
 % Other image parameters
 nX = 35;                       % # of points per row in synthetic aperture
 nY = 35;                       % # of rows in synthetic aperture
-noiseVec = [0,0,0];          % nonzero values will inject noise
+noiseVec = [0,0,0];            % nonzero values will inject noise
 
 %% Generate SAR data with the given points 
 PulseData = FormPulses(x0, y0, z0, nX, nY, noiseVec);
