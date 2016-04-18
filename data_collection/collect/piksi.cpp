@@ -28,6 +28,18 @@ void sbp_pos_llh_callback(u16 sender_id, u8 len,
     p->pos_llh = *(msg_pos_llh_t *)msg;
 }
 
+void sbp_baesline_ned_callback(u16 sender_id, u8 len,
+                               u8 msg[], void *context) {
+    (void)sender_id, (void)len;
+    
+    assert(context != nullptr);
+    
+    Piksi *p = (Piksi *)context;
+    
+    p->callbacks_rcvd++;
+    p->baseline_ned = *(msg_baseline_ned_t *)msg;
+}
+
 void sbp_gps_time_callback(u16 sender_id, u8 len,
         u8 msg[], void *context) {
     (void)sender_id, (void)len;
@@ -78,6 +90,9 @@ Piksi::Piksi(const string & usb_port) : callbacks_rcvd(0)  {
             this, &gps_time_node);
     sbp_register_callback(&s, SBP_MSG_POS_LLH, &sbp_pos_llh_callback,
             this, &pos_llh_node);
+    
+    sbp_register_callback(&s, SBP_MSG_BASELINE_NED, &sbp_baesline_ned_callback,
+                           this, &baseline_ned_node);
 
     LOG("%s", "Finished constructing Piksi");
 }
@@ -88,8 +103,11 @@ Piksi::~Piksi() {
 }
 
 // Collects 1 radar pulse
-void Piksi::collect(msg_pos_llh_t &pos, msg_gps_time_t &gps) {
-    s8 ret = 0;
+void Piksi::collect(msg_pos_llh_t &pos, msg_gps_time_t &gps, msg_baseline_ned_t &ned) {
+    
+    (void)pos;
+    
+    u8 ret = 0;
 
     do {
         LOG("Insufficient (%d) callbacks received, expected %d",
@@ -100,7 +118,8 @@ void Piksi::collect(msg_pos_llh_t &pos, msg_gps_time_t &gps) {
     callbacks_rcvd = 0;
 
     if (ret >= 0) {
-        pos = pos_llh;
+//        pos = pos_llh;
+        ned = baseline_ned;
         gps = gps_time;
     }
     else LOG("sbp_process error code %d", ret);

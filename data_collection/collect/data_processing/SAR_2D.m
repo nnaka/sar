@@ -1,7 +1,6 @@
 %% monoSAR
 % Produces 2D SAR images from 1D apertures
-function [image_set] = SAR_2D(rawCollect, sceneSize, display_image, ...
-                               GPS_override, scan_incriment)
+function [image_set] = SAR_2D(rawCollect, sceneSize, display_image)
 
 
 ovsFac = 4;                  % Oversampling factor applied when interpolating
@@ -39,19 +38,6 @@ if display_image
 end
 %set(hFig, 'Position', [750 750 1500  1000])
 
-%% Override GPS position data if requested 
-if GPS_override
-    aperture_len = scan_incriment * numScans;
-%     xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
-    xLoc = linspace(-(0.015*length(rawCollect))/2,(0.015*length(rawCollect))/2,length(rawCollect));
-
-    for i=1:length(rawCollect)
-%         rawCollect{i}.xLoc_m = (-scan_incriment*(i-1));
-        rawCollect{i}.xLoc_m = xLoc(end-i+1);
-        rawCollect{i}.yLoc_m = 0;
-        rawCollect{i}.zLoc_m = 0;      % maybe???
-    end
-end
 
 %% Pre-compute Variables
 % Convert scan 'bins' from picoseconds to distance in meters (d=rt)
@@ -68,14 +54,14 @@ else
 	rngWin = ones(numSamp,1);
 end
 
-if angleLimit_deg < 90
-    for xIdx = 1:numel(imgX)
-        % Determine which pixels are outside the angle limit of the image
-        clipPixels = (abs(imgY) < abs(imgX(xIdx)*tan(pi/2 - angleLimit_deg*(pi/180))));
-        % Set these out-of-bounds pixels to "unknown"
-        myImg(clipPixels,xIdx) = nan;
-    end
-end
+% if angleLimit_deg < 90
+%     for xIdx = 1:numel(imgX)
+%         % Determine which pixels are outside the angle limit of the image
+%         clipPixels = (abs(imgY) < abs(imgX(xIdx)*tan(pi/2 - angleLimit_deg*(pi/180))));
+%         % Set these out-of-bounds pixels to "unknown"
+%         myImg(clipPixels,xIdx) = nan;
+%     end
+% end
 
 %% Process Scans
 
@@ -113,7 +99,8 @@ for scanIdx = 1:numScans
         trimLen = sum(rangeLo>length(tmpRP));
 
         z = rangeLo(1:end-trimLen);
-  
+        
+        
         currentPulse(:,xIdx) = [(tmpRP(z) + diffRP(z).*rangeFrac(1:end-trimLen)) .* matchVec(1:end-trimLen); zeros(trimLen,1)];
         %myImg(:,xIdx) = myImg(:,xIdx) + [(tmpRP(z) + diffRP(z).*rangeFrac(1:end-trimLen)) .* matchVec(1:end-trimLen); zeros(trimLen,1)];
         
@@ -137,6 +124,7 @@ end
 % if displayImage
 %     close(hFig);
 image_set = myImg;
+save pulseSet.mat pulseSet
 end
 
 

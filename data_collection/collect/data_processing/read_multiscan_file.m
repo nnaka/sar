@@ -17,8 +17,8 @@ scan_idx = 1;
 row_idx = 1;
 while row_idx <= num_rows
     
-    raw_scan(scan_idx,:,row_idx) = raw_data(idx,1:end-4);
-    gps_data(scan_idx,:,row_idx) = raw_data(idx,end-3:end-1);
+    raw_scan(scan_idx,:,row_idx) = raw_data(idx,1:end-3);
+    gps_data(scan_idx,:,row_idx) = raw_data(idx,end-2:end);
     scan_idx = scan_idx + 1;
     idx = idx + 1;
     

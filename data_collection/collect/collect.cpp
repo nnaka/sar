@@ -12,6 +12,9 @@
 #include <iostream>
 #include <string.h>
 #include <unistd.h> // close
+#include <time.h>
+#include <sys/time.h>
+
 
 #include <sys/socket.h>
 #include <netinet/in.h> // struct sockaddr_in
@@ -20,8 +23,6 @@
 #include "common.h"
 
 #include "pulse_history.h"
-
-using namespace std;
 
 /*
  * TODO
@@ -88,14 +89,42 @@ int main(int argc, char *argv[]) {
     
     int row_num = 1;
     
+    // initialize data for timing
+    // data is collected at a rate of 10 Hz
+    struct timeval currTime;
+    struct timeval prevTime;
+    gettimeofday(&currTime, NULL);
+    prevTime = currTime;
+    long diff = 0;
+    
     do {
         wait_for(sock, START_COLLECT);
         
         std::cout << "Row " << row_num << ",\n\n";
 
-        do { ph.collect(); } while (!check_for(sock, STOP_COLLECT));
+        do {
+            // update current time
+            gettimeofday(&currTime, NULL);
+            
+            // update difference between currTime and prevTime
+            // check if a second has elapsed
+            // this is necessary because ns wrap when seconds elapse
+            // 10^9 ns is one second
+            if (currTime.tv_sec > prevTime.tv_sec) {
+                diff = 1000000 + (currTime.tv_usec - prevTime.tv_usec);
+            } else {
+                diff = currTime.tv_usec - prevTime.tv_usec;
+            }
+            // if diff is greater than 100ms, take gps / radar data
+            // (10 Hz data rate)
+            if (diff > 100000) {
+                ph.collect();
+                prevTime = currTime;
+            }
+        
+        } while (!check_for(sock, STOP_COLLECT));
 
-        cout << ph;
+        std::cout << ph;
 
         ph.clearHistory();
 
@@ -103,9 +132,39 @@ int main(int argc, char *argv[]) {
     } while (!check_for(sock, CLOSE_SOCKET));
     
     int end_file = -1;                          // signifies end of file for
-    cout << (row_num-1) << "\n" << end_file;   // Matlab csv read file script
+    std::cout << (row_num-1) << "\n" << end_file;   // Matlab csv read file script
              
     close(sock);
 
     return 0;
 }
+
+
+// So time.h was never implemented for Mac OS
+// This code should compensate for that,
+// while the code commented out above should
+// work on the HummingBoard. However, this
+// code may not work on the HummingBoard
+
+//#include <mach/mach_time.h>
+//#define ORWL_NANO (+1.0E-9)
+//#define ORWL_GIGA UINT64_C(1000000000)
+//
+//static double orwl_timebase = 0.0;
+//static uint64_t orwl_timestart = 0;
+//
+//struct timespec orwl_gettime(void) {
+//    // be more careful in a multithreaded environement
+//    if (!orwl_timestart) {
+//        mach_timebase_info_data_t tb = { 0 };
+//        mach_timebase_info(&tb);
+//        orwl_timebase = tb.numer;
+//        orwl_timebase /= tb.denom;
+//        orwl_timestart = mach_absolute_time();
+//    }
+//    struct timespec t;
+//    double diff = (mach_absolute_time() - orwl_timestart) * orwl_timebase;
+//    t.tv_sec = diff * ORWL_NANO;
+//    t.tv_nsec = diff - (t.tv_sec * ORWL_GIGA);
+//    return t;
+//}

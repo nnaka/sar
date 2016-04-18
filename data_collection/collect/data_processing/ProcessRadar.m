@@ -1,10 +1,9 @@
 %% Initailize Parameters
 clear;
 addpath('../data');
-
 % File parameters 
 rp_file = 'radar_param';
-scan_file = 'sundayTestRow1';
+scan_file = 'sunday417Test1';
 
 
 % TODO 
@@ -38,10 +37,9 @@ scanResPs = scanStepBins*1.907;          % 61 ps sampling resolution
 scanCount = 1;              % number of scans per spatial location (2^16-1 for continuous)    
 
 %% Read Radar Data From File
-% [raw_scan, gps_data] = read_multiscan_file(scan_file);
-
-[raw_scan, gps_data] = read_scan_file(scan_file);
-scan_dim = size(raw_scan);               % [num_scans bins_per_scan]
+    [raw_scan, gps_data] = read_multiscan_file(scan_file);
+%     [raw_scan, gps_data] = read_scan_file(scan_file);
+    scan_dim = size(raw_scan);               % [num_scans bins_per_scan]
 
 %% Plot Raw Radar Data 
 plotRawScan(raw_scan, scan_dim, scanResPs, C_mps);
@@ -55,12 +53,44 @@ display_image = true;                   % display image during processing?
 
 % GPS data often sucks. If the test went horrible, set this variable to 
 % override the GPS data.
-GPS_override = true;
+GPS_override = false;
 scan_incriment = 0;
 if GPS_override
-    aperture_length = 3.3;             % (m) aperture length
+    aperture_length = 10;             % (m) aperture length
     scan_incriment = aperture_length / scan_dim(1);
-end 
+
+    aperture_len = scan_incriment * numScans;
+     xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
+    %xLoc = linspace(-(0.015*length(rawCollect))/2,(0.015*length(rawCollect))/2,length(rawCollect));
+
+    for i=1:length(rawCollect)
+%         rawCollect{i}.xLoc_m = (-scan_incriment*(i-1));
+        rawCollect{i}.xLoc_m = xLoc(end-i+1);
+        rawCollect{i}.yLoc_m = 0;
+        rawCollect{i}.zLoc_m = 0;      % maybe???
+    end
+else 
+    gps_data_m = gps_data/1000;
+    x = gps_data_m(:,1);
+    y = gps_data_m(:,2);
+    z = gps_data_m(:,3);
+    
+    xdiff = 25-x(1);
+    ydiff = 25-y(1);
+    zdiff = 0-z(1);
+    
+    x = x + xdiff;
+    y = y + ydiff;
+    z = z + zdiff;
+    %normalize positions of GPS data
+    
+    for i=1:length(rawCollect)
+        rawCollect{i}.xLoc_m = x(i);
+        rawCollect{i}.yLoc_m = y(i);
+        rawCollect{i}.zLoc_m = z(i);
+    end
+    
+end
 
 % create a 3D or 2D image depending on the size of the data set
 if numel(scan_dim) == 3
@@ -74,16 +104,16 @@ if numel(scan_dim) == 3
 else 
     % define scene size
     height = 0.3810;                            % aperture height
-    sceneSizeX = 20;
-    sceneSizeY = maxDistance_m;
+    sceneSizeX = 50;
+%     sceneSizeY = maxDistance_m;
+    sceneSizeY = 50;
     sceneSize = [sceneSizeX sceneSizeY height]; % [X Y Z]
     
     % create 1D backprojection image of radar scene
 %     processScan(rawCollect, ovsFac, C_mps, rangeScaleFac);
     
     % create 2D backprojection image of radar scene
-    image_set = SAR_2D(rawCollect, sceneSize, display_image,...
-                        GPS_override, scan_incriment);
+    image_set = SAR_2D(rawCollect, sceneSize, display_image);
 end 
 
 
