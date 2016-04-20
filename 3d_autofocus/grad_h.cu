@@ -35,6 +35,7 @@ cudaError_t checkCudaInner(cudaError_t result, int lineno)
 
 __host__ __device__ inline double entropy(double acc, double Ez)
 {
+  assert(Ez > 0);
   return (acc - Ez * log(Ez)) / Ez;
 }
 
@@ -60,6 +61,7 @@ __global__ void computeEz(const T * __restrict__ Br, const T * __restrict__ Bi,
 
     double Zn_mag = Zn_r * Zn_r + Zn_i * Zn_i;
 
+    assert(Zn_mag >= 0);
     x += Zn_mag;
     y += Zn_mag * log(Zn_mag);
   }
@@ -128,6 +130,7 @@ __global__ void kernelSum(const T * __restrict__ Br, const T * __restrict__ Bi,
     Zi[blockIdx.x] = s2[0];
 
     Z_mag[blockIdx.x] = s1[0] * s1[0] + s2[0] * s2[0];
+    assert(Z_mag[blockIdx.x] >= 0);
   }
 }
 
@@ -140,6 +143,7 @@ __global__ void computeEntropy(T *Z_mag, T *d_acc, unsigned int n)
   unsigned int tid = threadIdx.x;
   unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
 
+  assert(Z_mag[i] >= 0);
   sdata[tid] = (i < n) ? Z_mag[i] * log(Z_mag[i]) : 0;
 
   __syncthreads();
@@ -194,7 +198,6 @@ void H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
   assert(B_len % K == 0); // length(B) should always be a multiple of K
 
   double *d_Z_mag = NULL;
-
   checkCuda(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
 
   kernelSum<double><<<N, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, Zr, Zi, K, d_Z_mag, d_P);
@@ -231,12 +234,14 @@ void H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
 void gradH(double *phi_offsets, const double *Br, const double *Bi,
     double *grad, size_t K, size_t B_len)
 {
-  const auto maxMem = 2147483648 / 2; // 1 GB - size of half of GPU physical memory
+  // const auto maxMem = 2147483648 / 2; // 1 GB - size of half of GPU physical memory
   const size_t N = B_len / K;
 
   // Solve for N:
   // (4 * K + 2 * N + 2 * K * N_prime) * sizeof(double);
-  size_t N_prime = min((maxMem / sizeof(double) - 4 * K - 2 * N) / (2 * K), N);
+  // size_t N_prime = min((maxMem / sizeof(double) - 4 * K - 2 * N) / (2 * K), N);
+  size_t N_prime = 64000;
+  // TODO: Determine a more precise value
   size_t B_len_prime = N_prime * K;
 
   double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi, *d_Ez, *d_acc, *d_Ar, *d_Ai, *d_grad;
@@ -265,7 +270,7 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
   double sin_delt, cos_delt;
   sincos(delta, &sin_delt, &cos_delt);
-  computeAlpha<<<(K + nT - 1) / nT, nT, 0>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
+  computeAlpha<<<(K + nT - 1) / nT, nT>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
 
   PRINTF("In gradH, about to compute Z\n");
   PRINTF("Computed Z\n");

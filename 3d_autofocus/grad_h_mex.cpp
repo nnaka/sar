@@ -13,7 +13,7 @@
 /* The gateway function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *phi_offsets, *Br, *Bi, *grad;
-    size_t K, B_len, N;
+    size_t K, B_len;
 
     if (nrhs != 2) {
         mexErrMsgIdAndTxt("Autofocus:image:nrhs", "Two inputs required.");
