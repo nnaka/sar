@@ -33,8 +33,6 @@ void PulseHistory::collect() {
     for (unsigned int i = 0; i < info.msg.scanInfo.numSamplesTotal; i++) {
         ss << info.scan[i]  << ", ";
     }
-
-    time_t t = time(&t);
     
     ss << ned_info.n    <<   ", "
        << ned_info.e    <<   ", "

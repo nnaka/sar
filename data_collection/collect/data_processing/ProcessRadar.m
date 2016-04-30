@@ -3,7 +3,7 @@ clear;
 addpath('../data');
 % File parameters 
 rp_file = 'radar_param';
-scan_file = 'sunday417Test1';
+scan_file = 'gpsTestSat';
 
 
 % TODO 
@@ -42,7 +42,7 @@ scanCount = 1;              % number of scans per spatial location (2^16-1 for c
     scan_dim = size(raw_scan);               % [num_scans bins_per_scan]
 
 %% Plot Raw Radar Data 
-plotRawScan(raw_scan, scan_dim, scanResPs, C_mps);
+%plotRawScan(raw_scan(:,:,1), scan_dim, scanResPs, C_mps);
 
 %% Format Raw Radar Data
 rawCollect = formatData(raw_scan, gps_data, scan_dim, ...
@@ -53,10 +53,11 @@ display_image = true;                   % display image during processing?
 
 % GPS data often sucks. If the test went horrible, set this variable to 
 % override the GPS data.
-GPS_override = false;
+GPS_override = true;
 scan_incriment = 0;
 if GPS_override
-    aperture_length = 10;             % (m) aperture length
+    numScans = scan_dim(1);
+    aperture_length = 3.3;             % (m) aperture length
     scan_incriment = aperture_length / scan_dim(1);
 
     aperture_len = scan_incriment * numScans;
@@ -95,8 +96,8 @@ end
 % create a 3D or 2D image depending on the size of the data set
 if numel(scan_dim) == 3
     img_size = [50 50 50];
-    scene_size = [10, maxDistance_m, 10];
-    form_pulse_set = false;
+    scene_size = [20, maxDistance_m, 10];
+    form_pulse_set = true;
     image_set = SAR_3D(rawCollect, img_size, scene_size, form_pulse_set);
     
     dB = 10;
@@ -104,9 +105,9 @@ if numel(scan_dim) == 3
 else 
     % define scene size
     height = 0.3810;                            % aperture height
-    sceneSizeX = 50;
+    sceneSizeX = 20;
 %     sceneSizeY = maxDistance_m;
-    sceneSizeY = 50;
+    sceneSizeY = 20;
     sceneSize = [sceneSizeX sceneSizeY height]; % [X Y Z]
     
     % create 1D backprojection image of radar scene

@@ -1,0 +1,311 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ProcessRadar</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-20"><meta name="DC.source" content="ProcessRadar.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Initailize Parameters</a></li><li><a href="#2">Read Radar Data From File</a></li><li><a href="#3">Plot Raw Radar Data</a></li><li><a href="#4">Format Raw Radar Data</a></li><li><a href="#5">Process Raw Radar Data</a></li></ul></div><h2>Initailize Parameters<a name="1"></a></h2><pre class="codeinput">clear;
+addpath(<span class="string">'../data'</span>);
+<span class="comment">% File parameters</span>
+rp_file = <span class="string">'radar_param'</span>;
+scan_file = <span class="string">'sundayTestRow1'</span>;
+
+
+<span class="comment">% TODO</span>
+<span class="comment">% need additional file printed at start of scan for radar paramenters</span>
+<span class="comment">% (struct) rp = read_parameter_file(rp_file);</span>
+<span class="comment">% scanStartPs = rp.scanStartPs;</span>
+<span class="comment">% maxDistance_m = rp.maxDistance_m;</span>
+<span class="comment">% pulseIntegrationIndex = rp.pii;</span>
+<span class="comment">% transmitGain = rp.transmitGain;</span>
+<span class="comment">% scanIntervalTime_ms = rp.scanIntervalTime_ms;</span>
+<span class="comment">% scanStepBins = rp.scanStepBins;</span>
+<span class="comment">% antennaMode = rp.antennaMode;</span>
+
+<span class="comment">% User selectable</span>
+scanStartPs = 17400;            <span class="comment">% Adjust this to match antenna delay</span>
+maxDistance_m = 20;             <span class="comment">% P410 will quantize to closest value above this number</span>
+pulseIntegrationIndex = 12;     <span class="comment">% The number of pulses per scan point (2^n)</span>
+transmitGain = 63;              <span class="comment">% Tx power (0 for FCC legal)</span>
+scanIntervalTime_ms = 0;        <span class="comment">% Time between start of each scan in millisecs</span>
+ovsFac = 4;                     <span class="comment">% Oversampling factor applied when interpolating</span>
+rangeScaleFac = 3/2;            <span class="comment">% Normalize by r^rangeScaleFac</span>
+ampFilter = 1.5e+7;             <span class="comment">% Amplitude to filter below</span>
+
+<span class="comment">% Derived parameters</span>
+C_mps = 299792458;
+scanStopPs = scanStartPs + (2*maxDistance_m/C_mps)*1e12; <span class="comment">% 1e12 ps in one sec</span>
+codeChannel = 0;            <span class="comment">% PN code</span>
+antennaMode = 3;            <span class="comment">% Tx: B, Rx: A</span>
+scanStepBins = 32;
+scanResPs = scanStepBins*1.907;          <span class="comment">% 61 ps sampling resolution</span>
+scanCount = 1;              <span class="comment">% number of scans per spatial location (2^16-1 for continuous)</span>
+</pre><h2>Read Radar Data From File<a name="2"></a></h2><pre>   [raw_scan, gps_data] = read_multiscan_file(scan_file);</pre><pre class="codeinput">    [raw_scan, gps_data] = read_scan_file(scan_file);
+    scan_dim = size(raw_scan);               <span class="comment">% [num_scans bins_per_scan]</span>
+</pre><h2>Plot Raw Radar Data<a name="3"></a></h2><p>plotRawScan(raw_scan(:,:,1), scan_dim, scanResPs, C_mps);</p><h2>Format Raw Radar Data<a name="4"></a></h2><pre class="codeinput">rawCollect = formatData(raw_scan, gps_data, scan_dim, <span class="keyword">...</span>
+                        scanResPs, C_mps, scanIntervalTime_ms);
+</pre><h2>Process Raw Radar Data<a name="5"></a></h2><pre class="codeinput">display_image = true;                   <span class="comment">% display image during processing?</span>
+
+<span class="comment">% GPS data often sucks. If the test went horrible, set this variable to</span>
+<span class="comment">% override the GPS data.</span>
+GPS_override = true;
+scan_incriment = 0;
+<span class="keyword">if</span> GPS_override
+    numScans = scan_dim(1);
+    aperture_length = 3.3;             <span class="comment">% (m) aperture length</span>
+    scan_incriment = aperture_length / scan_dim(1);
+
+    aperture_len = scan_incriment * numScans;
+     xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
+    <span class="comment">%xLoc = linspace(-(0.015*length(rawCollect))/2,(0.015*length(rawCollect))/2,length(rawCollect));</span>
+
+    <span class="keyword">for</span> i=1:length(rawCollect)
+<span class="comment">%         rawCollect{i}.xLoc_m = (-scan_incriment*(i-1));</span>
+        rawCollect{i}.xLoc_m = xLoc(end-i+1);
+        rawCollect{i}.yLoc_m = 0;
+        rawCollect{i}.zLoc_m = 0;      <span class="comment">% maybe???</span>
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    gps_data_m = gps_data/1000;
+    x = gps_data_m(:,1);
+    y = gps_data_m(:,2);
+    z = gps_data_m(:,3);
+
+    xdiff = 25-x(1);
+    ydiff = 25-y(1);
+    zdiff = 0-z(1);
+
+    x = x + xdiff;
+    y = y + ydiff;
+    z = z + zdiff;
+    <span class="comment">%normalize positions of GPS data</span>
+
+    <span class="keyword">for</span> i=1:length(rawCollect)
+        rawCollect{i}.xLoc_m = x(i);
+        rawCollect{i}.yLoc_m = y(i);
+        rawCollect{i}.zLoc_m = z(i);
+    <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">% create a 3D or 2D image depending on the size of the data set</span>
+<span class="keyword">if</span> numel(scan_dim) == 3
+    img_size = [50 50 50];
+    scene_size = [20, maxDistance_m, 10];
+    form_pulse_set = true;
+    image_set = SAR_3D(rawCollect, img_size, scene_size, form_pulse_set);
+
+    dB = 10;
+    ViewCube(image_set,dB);
+<span class="keyword">else</span>
+    <span class="comment">% define scene size</span>
+    height = 0.3810;                            <span class="comment">% aperture height</span>
+    sceneSizeX = 20;
+<span class="comment">%     sceneSizeY = maxDistance_m;</span>
+    sceneSizeY = 20;
+    sceneSize = [sceneSizeX sceneSizeY height]; <span class="comment">% [X Y Z]</span>
+
+    <span class="comment">% create 1D backprojection image of radar scene</span>
+<span class="comment">%     processScan(rawCollect, ovsFac, C_mps, rangeScaleFac);</span>
+
+    <span class="comment">% create 2D backprojection image of radar scene</span>
+    image_set = SAR_2D(rawCollect, sceneSize, display_image);
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Processing scans...
+</pre><img vspace="5" hspace="5" src="ProcessRadar_01.png" style="width:560px;height:420px;" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Initailize Parameters
+clear;
+addpath('../data');
+% File parameters 
+rp_file = 'radar_param';
+scan_file = 'sundayTestRow1';
+
+
+% TODO 
+% need additional file printed at start of scan for radar paramenters 
+% (struct) rp = read_parameter_file(rp_file);
+% scanStartPs = rp.scanStartPs;
+% maxDistance_m = rp.maxDistance_m;
+% pulseIntegrationIndex = rp.pii;
+% transmitGain = rp.transmitGain;
+% scanIntervalTime_ms = rp.scanIntervalTime_ms;
+% scanStepBins = rp.scanStepBins;
+% antennaMode = rp.antennaMode;
+
+% User selectable   
+scanStartPs = 17400;            % Adjust this to match antenna delay
+maxDistance_m = 20;             % P410 will quantize to closest value above this number
+pulseIntegrationIndex = 12;     % The number of pulses per scan point (2^n)
+transmitGain = 63;              % Tx power (0 for FCC legal)
+scanIntervalTime_ms = 0;        % Time between start of each scan in millisecs
+ovsFac = 4;                     % Oversampling factor applied when interpolating
+rangeScaleFac = 3/2;            % Normalize by r^rangeScaleFac
+ampFilter = 1.5e+7;             % Amplitude to filter below
+
+% Derived parameters
+C_mps = 299792458;
+scanStopPs = scanStartPs + (2*maxDistance_m/C_mps)*1e12; % 1e12 ps in one sec
+codeChannel = 0;            % PN code
+antennaMode = 3;            % Tx: B, Rx: A
+scanStepBins = 32;          
+scanResPs = scanStepBins*1.907;          % 61 ps sampling resolution
+scanCount = 1;              % number of scans per spatial location (2^16-1 for continuous)    
+
+%% Read Radar Data From File
+%     [raw_scan, gps_data] = read_multiscan_file(scan_file);
+    [raw_scan, gps_data] = read_scan_file(scan_file);
+    scan_dim = size(raw_scan);               % [num_scans bins_per_scan]
+
+%% Plot Raw Radar Data 
+% plotRawScan(raw_scan(:,:,1), scan_dim, scanResPs, C_mps);
+
+%% Format Raw Radar Data
+rawCollect = formatData(raw_scan, gps_data, scan_dim, ...
+                        scanResPs, C_mps, scanIntervalTime_ms);
+
+%% Process Raw Radar Data
+display_image = true;                   % display image during processing?
+
+% GPS data often sucks. If the test went horrible, set this variable to 
+% override the GPS data.
+GPS_override = true;
+scan_incriment = 0;
+if GPS_override
+    numScans = scan_dim(1);
+    aperture_length = 3.3;             % (m) aperture length
+    scan_incriment = aperture_length / scan_dim(1);
+
+    aperture_len = scan_incriment * numScans;
+     xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
+    %xLoc = linspace(-(0.015*length(rawCollect))/2,(0.015*length(rawCollect))/2,length(rawCollect));
+
+    for i=1:length(rawCollect)
+%         rawCollect{i}.xLoc_m = (-scan_incriment*(i-1));
+        rawCollect{i}.xLoc_m = xLoc(end-i+1);
+        rawCollect{i}.yLoc_m = 0;
+        rawCollect{i}.zLoc_m = 0;      % maybe???
+    end
+else 
+    gps_data_m = gps_data/1000;
+    x = gps_data_m(:,1);
+    y = gps_data_m(:,2);
+    z = gps_data_m(:,3);
+    
+    xdiff = 25-x(1);
+    ydiff = 25-y(1);
+    zdiff = 0-z(1);
+    
+    x = x + xdiff;
+    y = y + ydiff;
+    z = z + zdiff;
+    %normalize positions of GPS data
+    
+    for i=1:length(rawCollect)
+        rawCollect{i}.xLoc_m = x(i);
+        rawCollect{i}.yLoc_m = y(i);
+        rawCollect{i}.zLoc_m = z(i);
+    end
+    
+end
+
+% create a 3D or 2D image depending on the size of the data set
+if numel(scan_dim) == 3
+    img_size = [50 50 50];
+    scene_size = [20, maxDistance_m, 10];
+    form_pulse_set = true;
+    image_set = SAR_3D(rawCollect, img_size, scene_size, form_pulse_set);
+    
+    dB = 10;
+    ViewCube(image_set,dB);
+else 
+    % define scene size
+    height = 0.3810;                            % aperture height
+    sceneSizeX = 20;
+%     sceneSizeY = maxDistance_m;
+    sceneSizeY = 20;
+    sceneSize = [sceneSizeX sceneSizeY height]; % [X Y Z]
+    
+    % create 1D backprojection image of radar scene
+%     processScan(rawCollect, ovsFac, C_mps, rangeScaleFac);
+    
+    % create 2D backprojection image of radar scene
+    image_set = SAR_2D(rawCollect, sceneSize, display_image);
+end 
+
+
+
+
+
+
+
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

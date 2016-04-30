@@ -35,7 +35,6 @@ class Piksi {
 
         struct sp_port *piksi_port;
 
-    
         sbp_state_t s;
     
         sbp_msg_callbacks_node_t pos_llh_node;

@@ -24,7 +24,7 @@ void sbp_pos_llh_callback(u16 sender_id, u8 len,
 
     Piksi *p = (Piksi *)context;
 
-    p->callbacks_rcvd++;
+    //p->callbacks_rcvd++;
     p->pos_llh = *(msg_pos_llh_t *)msg;
 }
 
@@ -48,7 +48,7 @@ void sbp_gps_time_callback(u16 sender_id, u8 len,
 
     Piksi *p = (Piksi *)context;
 
-    p->callbacks_rcvd++;
+    //p->callbacks_rcvd++;
     p->gps_time = *(msg_gps_time_t *)msg;
 }
 
@@ -114,7 +114,6 @@ void Piksi::collect(msg_pos_llh_t &pos, msg_gps_time_t &gps, msg_baseline_ned_t 
                 callbacks_rcvd, NUM_CALLBACKS);
         ret = sbp_process(&s, &piksi_port_read);
     } while (ret >= 0 && callbacks_rcvd < NUM_CALLBACKS - 1);
-
     callbacks_rcvd = 0;
 
     if (ret >= 0) {
