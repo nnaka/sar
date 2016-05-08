@@ -1,4 +1,4 @@
-function [ focused_image, minEntropy, maxEntropy ] = minEntropyAutoFocus( pulseSet, numIterations )
+function [ focused_image, minEntropy, maxEntropy ] = minEntropyBruteForce( pulseSet, numIterations )
 
 % Minimum Entropy Auto Focus
 %
@@ -108,5 +108,3 @@ function [Ez] = findEz(img_int)
 Ez = sum(sum(sum(img_int)));
 
 end
-
-        
