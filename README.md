@@ -26,14 +26,6 @@ No description.
 
 No description.
 
-## `sbp_tutorial`
-
-Tutorial found online which executes basic Piksi GPS interfacing options.
-
-## `sample_pulson_app`
-
-Sample C application which exectutes basic PulsON 410 interfacing options.
-
 ## `support`
 
 A large library of helper MATLAB code used throughout.
