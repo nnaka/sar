@@ -1,4 +1,4 @@
-function [data] = bp(data)
+function [data, ph] = bp(data)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function performs a basic Backprojection operation. The %
@@ -66,6 +66,8 @@ data.im_final = zeros(size(data.x_mat));
 % Set up a vector to keep execution times for each pulse (sec)
 t = zeros(1,data.Np);
 
+ph = zeros(size(data.x_mat, 1), size(data.y_mat, 1), data.Np);
+
 % Loop through every pulse
 for ii = 1:data.Np
 
@@ -94,7 +96,9 @@ phCorr = exp(1i*4*pi*data.minF(ii)/c*dR);
 I = find(and(dR > min(data.r_vec), dR < max(data.r_vec)));
 
 % Update the image using linear interpolation
-data.im_final(I) = data.im_final(I) + interp1(data.r_vec,rc,dR(I),'linear') .* phCorr(I);
+contribution = interp1(data.r_vec,rc,dR(I),'linear') .* phCorr(I);
+ph(:, :, ii) = reshape(contribution, size(data.x_mat, 1), size(data.y_mat, 1));
+data.im_final(I) = data.im_final(I) + contribution;
 
 % Determine the execution time for this pulse
 t(ii) = toc;

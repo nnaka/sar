@@ -9,10 +9,11 @@
 %
 % TODO: Validate parameters (e.g. start=355, delTheta=20 is an unchecked
 % error currently)
-function [image] = bpDriver(path, start, delTheta)
+function [image, pulseHistory] = bpDriver(path, start, delTheta)
 
 bpData = {};
 image = [];
+pulseHistory = [];
 
 for i = start:(start + delTheta - 1)
     filename = sprintf('%s/HH/data_3dsar_pass8_az%03i_HH.mat', path, i);
@@ -21,27 +22,29 @@ for i = start:(start + delTheta - 1)
 
     % TODO: Scene and image size should be computed
     [X, Y] = meshgrid(-50:0.2:50);
-    
-    Z = zeros(size(X));
 
     bpData.minF   = data.freq(1) * ones(1, size(data.fp, 2));
     bpData.x_mat  = X;
     bpData.y_mat  = Y;
-    bpData.z_mat  = Z;
+    bpData.z_mat  = zeros(size(X, 1));
     bpData.AntX   = data.x;
     bpData.AntY   = data.y;
     bpData.AntZ   = data.z;
     bpData.R0     = data.r0;
     bpData.phdata   = data.fp;
-    bpData.Nfft   = 10 * size(data.freq, 1); % Rule of thumb from paper
+
+    % Rule of thumb from paper -- power of 2 is optimized
+    bpData.Nfft   = 2 ^ nextpow2(10 * size(data.freq, 1));
     bpData.deltaF = (data.freq(end) - data.freq(1)) / (length(data.freq) - 1);
 
-    bpData = bp(bpData);
+    [bpData, ph] = bp(bpData);
 
     if size(image, 1) == 0
       image = bpData.im_final;
+      pulseHistory = ph;
     else
       image = image + bpData.im_final;
+      pulseHistory = horzcat(pulseHistory, ph);
     end
 end
 
