@@ -2,7 +2,7 @@
 // Computes a finite difference approximation to H given phase offsets and
 // complex pulse history
 // Usage:
-//        gradVector = grad_h(phi_offset_vector, image_vector)
+//        grad = grad_h_mex(phi_offset_vector, image_vector)
 //
 
 #include "mex.h"
