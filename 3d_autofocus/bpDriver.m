@@ -2,21 +2,22 @@
 % backprojection algorithm, here
 % (https://dlmacph-radar.googlecode.com/hg/SPIE10toolbox.pdf)
 %
-% @param path [String] - path to GOTCHA data (terminated by `path*`)
-% @param start [Integer] - start angle (1 to 360)
-% @param delTheta [Integer] - number of degrees to sweep through (1 to 360)
-% @return image [2D array] - complex valued SAR product
+% @param path [String] path to GOTCHA data (terminated by `path*`)
+% @param [HH,HV,VH,VV] polarization of GOTCHA dataset
+% @param start [Integer] start angle (1 to 360)
+% @param delTheta [Integer] number of degrees to sweep through (1 to 360)
+% @return image [2D array] complex valued SAR product
 %
 % TODO: Validate parameters (e.g. start=355, delTheta=20 is an unchecked
 % error currently)
-function [image, pulseHistory] = bpDriver(path, start, delTheta)
+function [image, pulseHistory] = bpDriver(path, pz, start, delTheta)
 
 bpData = {};
 image = [];
 pulseHistory = [];
 
 for i = start:(start + delTheta - 1)
-    filename = sprintf('%s/HH/data_3dsar_pass8_az%03i_HH.mat', path, i);
+    filename = sprintf('%s/%s/data_3dsar_pass8_az%03i_%s.mat', path, pz, i, pz);
 
     load(filename);
 
