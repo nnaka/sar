@@ -48,14 +48,4 @@ for i = start:(start + delTheta - 1)
     end
 end
 
-% TODO: This should be removed
-figure;
-hAx = axes;
-imagesc(mag2db(abs(image)), 'Parent', hAx);
-colormap(hAx,gray);
-colorbar;
-xlabel('X (meters)');
-ylabel('Y (meters)');
-set(hAx,'YDir','normal');
-
 end
