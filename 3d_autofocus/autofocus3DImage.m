@@ -44,7 +44,7 @@ function [ image, minEntropy, origEntropy ] = autofocus3DImage( ph, gradFunc )
         % We must index into the 1D array as if it were 3D so the index
         % is complicated.
         idx = (x - 1) * Y * Z + (y - 1) * Z + (z - 1) + 1;
-        computeZ(x, y, z) = focusedImage(idx);
+        image(x, y, z) = focusedImage(idx);
       end
     end
   end
