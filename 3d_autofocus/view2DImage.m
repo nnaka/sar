@@ -8,12 +8,16 @@ function view2DImage( image )
 figure;
 hAx = axes;
 
-imagesc(mag2db(abs(image)), 'Parent', hAx);
+image = mag2db(abs(image));
 
-colormap(hAx,gray);
+hImg = imagesc(image, 'Parent', hAx);
+
+colormap(hAx, gray);
 colorbar;
-xlabel('X (meters)');
-ylabel('Y (meters)');
 set(hAx,'YDir','normal');
+
+if ~isinf(max(image(:)))
+  caxis(hAx, max(image(:)) + [-20 0]);
+end
 
 end
