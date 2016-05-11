@@ -1,4 +1,5 @@
-function [raw_scan, gps_data] = read_multiscan_file(file_name)
+
+function [raw_scan, gps_data] = readMultiScanFile(file_name)
 % reads a file with multiple scans to create a 3D radar scan array
 %
 % 1st Dimension: scan values and GPS data

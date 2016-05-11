@@ -49,6 +49,10 @@ rawCollect = formatData(raw_scan, gps_data, scan_dim, ...
                         scanResPs);
 
 %% Process Raw Radar Data
+
+rawCollect = generateRawCollect(scan_file);
+
+
 display_image = true;                   % display image during processing?
 
 % GPS data often sucks. If the test went horribly, set this variable to 
@@ -56,9 +60,9 @@ display_image = true;                   % display image during processing?
 GPS_override = false;
 scan_incriment = 0;
 if GPS_override
-    numScans = scan_dim(1);
+    numScans = numel(rawCollect);
     aperture_length = 3.3;             % (m) aperture length
-    scan_incriment = aperture_length / scan_dim(1);
+    scan_incriment = aperture_length / numel(rawCollect);
 
     aperture_len = scan_incriment * numScans;
      xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
@@ -94,15 +98,15 @@ else
 end
 
 % create a 3D or 2D image depending on the size of the data set
-if numel(scan_dim) == 3
-    img_size = [50 50 50];
-    scene_size = [20, maxDistance_m, 10];
-    form_pulse_set = true;
-    image_set = SAR_3D(rawCollect, img_size, scene_size, form_pulse_set);
-    
-    dB = 10;
-    ViewCube(image_set,dB);
-else 
+% if numel(scan_dim) == 3
+%     img_size = [50 50 50];
+%     scene_size = [20, maxDistance_m, 10];
+%     form_pulse_set = true;
+%     image_set = SAR_3D(rawCollect, img_size, scene_size, form_pulse_set);
+%     
+%     dB = 10;
+%     ViewCube(image_set,dB);
+% else 
     % define scene size
     height = 0.3810;                            % aperture height
     sceneSizeX = 100;
@@ -115,7 +119,7 @@ else
     
     % create 2D backprojection image of radar scene
     image_set = SAR_2D(rawCollect, sceneSize, display_image);
-end 
+% end 
 
 
 
