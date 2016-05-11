@@ -1,5 +1,7 @@
-function [] = plotRawScan(rawscan, scan_dim, scanResPs, C_mps)
+function [] = plotRawScan(rawscan, scan_dim, scanResPs)
 % Plot the raw scan data incrimentally
+
+C_mps = 299792458;
 
 figure;
 for i = 1:scan_dim(1)

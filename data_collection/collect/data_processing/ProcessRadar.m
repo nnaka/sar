@@ -3,7 +3,7 @@ clear;
 addpath('../data');
 % File parameters 
 rp_file = 'radar_param';
-scan_file = 'gpsTestSat';
+scan_file = 'droneTest1';
 
 
 % TODO 
@@ -42,18 +42,18 @@ scanCount = 1;              % number of scans per spatial location (2^16-1 for c
     scan_dim = size(raw_scan);               % [num_scans bins_per_scan]
 
 %% Plot Raw Radar Data 
-%plotRawScan(raw_scan(:,:,1), scan_dim, scanResPs, C_mps);
+%plotRawScan(raw_scan(:,:,1), scan_dim, scanResPs);
 
 %% Format Raw Radar Data
 rawCollect = formatData(raw_scan, gps_data, scan_dim, ...
-                        scanResPs, C_mps, scanIntervalTime_ms);
+                        scanResPs);
 
 %% Process Raw Radar Data
 display_image = true;                   % display image during processing?
 
-% GPS data often sucks. If the test went horrible, set this variable to 
+% GPS data often sucks. If the test went horribly, set this variable to 
 % override the GPS data.
-GPS_override = true;
+GPS_override = false;
 scan_incriment = 0;
 if GPS_override
     numScans = scan_dim(1);
@@ -64,10 +64,10 @@ if GPS_override
      xLoc = linspace(-aperture_len/2,aperture_len/2,numScans);
     %xLoc = linspace(-(0.015*length(rawCollect))/2,(0.015*length(rawCollect))/2,length(rawCollect));
 
-    for i=1:length(rawCollect)
+    for i=1:size(rawCollect,2);
 %         rawCollect{i}.xLoc_m = (-scan_incriment*(i-1));
-        rawCollect{i}.xLoc_m = xLoc(end-i+1);
-        rawCollect{i}.yLoc_m = 0;
+        rawCollect{i}.xLoc_m = xLoc(i);
+        rawCollect{i}.yLoc_m = rand;
         rawCollect{i}.zLoc_m = 0;      % maybe???
     end
 else 
@@ -76,16 +76,16 @@ else
     y = gps_data_m(:,2);
     z = gps_data_m(:,3);
     
-    xdiff = 25-x(1);
-    ydiff = 25-y(1);
-    zdiff = 0-z(1);
-    
-    x = x + xdiff;
-    y = y + ydiff;
-    z = z + zdiff;
+%     xdiff = 25-x(1);
+%     ydiff = 25-y(1);
+%     zdiff = 0-z(1);
+%     
+%     x = x + xdiff;
+%     y = y + ydiff;
+%     z = z + zdiff;
     %normalize positions of GPS data
     
-    for i=1:length(rawCollect)
+    for i=1:size(rawCollect,2)
         rawCollect{i}.xLoc_m = x(i);
         rawCollect{i}.yLoc_m = y(i);
         rawCollect{i}.zLoc_m = z(i);
@@ -105,9 +105,9 @@ if numel(scan_dim) == 3
 else 
     % define scene size
     height = 0.3810;                            % aperture height
-    sceneSizeX = 20;
+    sceneSizeX = 100;
 %     sceneSizeY = maxDistance_m;
-    sceneSizeY = 20;
+    sceneSizeY = 40;
     sceneSize = [sceneSizeX sceneSizeY height]; % [X Y Z]
     
     % create 1D backprojection image of radar scene
