@@ -37,4 +37,4 @@ grad_h_cuda.o:
 	grad_h.cu -o grad_h_cuda.o
 
 clean:
-	rm -f *.o grad_h_driver grad_h_driver_cuda
+	rm -f *.o grad_h_driver grad_h_driver_cuda *.mex*
