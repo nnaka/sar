@@ -63,45 +63,32 @@ data.r_vec = linspace(-data.Nfft/2,data.Nfft/2-1,data.Nfft)*data.maxWr/data.Nfft
 % Initialize the image with all zero values
 data.im_final = zeros(size(data.x_mat));
 
-% Set up a vector to keep execution times for each pulse (sec)
-t = zeros(1,data.Np);
-
 ph = zeros(size(data.x_mat, 1), size(data.y_mat, 1), data.Np);
 
 % Loop through every pulse
 for ii = 1:data.Np
 
   % Display status of the imaging process
-  if ii > 1
-    t_sofar = sum(t(1:(ii-1)));
-    t_est = (t_sofar*data.Np/(ii-1)-t_sofar)/60;
-    fprintf('Pulse %d of %d, %.02f minutes remaining\n',ii,data.Np,t_est);
-else
   fprintf('Pulse %d of %d\n',ii,data.Np);
-end
-tic
 
-% Form the range profile with zero padding added
-rc = fftshift(ifft(data.phdata(:,ii),data.Nfft));
+  % Form the range profile with zero padding added
+  rc = fftshift(ifft(data.phdata(:,ii),data.Nfft));
 
-% Calculate differential range for each pixel in the image (m)
-dR = sqrt((data.AntX(ii)-data.x_mat).^2 + ...
-(data.AntY(ii)-data.y_mat).^2 + ...
-(data.AntZ(ii)-data.z_mat).^2) - data.R0(ii);
+  % Calculate differential range for each pixel in the image (m)
+  dR = sqrt((data.AntX(ii)-data.x_mat).^2 + ...
+  (data.AntY(ii)-data.y_mat).^2 + ...
+  (data.AntZ(ii)-data.z_mat).^2) - data.R0(ii);
 
-% Calculate phase correction for image
-phCorr = exp(1i*4*pi*data.minF(ii)/c*dR);
+  % Calculate phase correction for image
+  phCorr = exp(1i*4*pi*data.minF(ii)/c*dR);
 
-% Determine which pixels fall within the range swath
-I = find(and(dR > min(data.r_vec), dR < max(data.r_vec)));
+  % Determine which pixels fall within the range swath
+  I = find(and(dR > min(data.r_vec), dR < max(data.r_vec)));
 
-% Update the image using linear interpolation
-contribution = interp1(data.r_vec,rc,dR(I),'linear') .* phCorr(I);
-ph(:, :, ii) = reshape(contribution, size(data.x_mat, 1), size(data.y_mat, 1));
-data.im_final(I) = data.im_final(I) + contribution;
-
-% Determine the execution time for this pulse
-t(ii) = toc;
+  % Update the image using linear interpolation
+  contribution = interp1(data.r_vec,rc,dR(I),'linear') .* phCorr(I);
+  ph(:, :, ii) = reshape(contribution, size(data.x_mat, 1), size(data.y_mat, 1));
+  data.im_final(I) = data.im_final(I) + contribution;
 end
 
 return
