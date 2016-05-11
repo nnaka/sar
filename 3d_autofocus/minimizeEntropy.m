@@ -24,24 +24,25 @@
 function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K, gradFunc )
   addpath('utility');
 
-  s                 = 100;     % Step size parameter for gradient descent
-  convergenceThresh = 0.01;    % Difference after which iteration "converges"
+  s                 = 100;  % Step size parameter for gradient descent
+  convergenceThresh = 0.01; % Difference after which iteration "converges"
+  stepMinimum       = 0.01; % Minimum step size
 
-  l                 = 2; % First iteration is all 0s, so start at iteration 2
-  minIdx            = 1;
-  minEntropy        = Inf;
+  l = 2; % First iteration is all 0s, so start at iteration 2
 
   % Holds array of potentially minimizing phase offsets (guessing zero
   % initially). 50 is an arbitrary guess for the number of iterations
   phi_offsets = zeros(50, K);
 
-  origEntropy = H(computeZ(phi_offsets(l, :), B));
+  focusedImage = computeZ(phi_offsets(l, :), B);
+  minEntropy   = H(focusedImage);
+  origEntropy  = minEntropy;
 
   while (1) % phi_offsets(1) = 0
     phi_offsets(l, :) = phi_offsets(l - 1, :) - s * gradFunc(phi_offsets(l - 1, :), B);
 
-    focusedImage = computeZ(phi_offsets(l, :), B);
-    tempEntropy = H(focusedImage);
+    tempImage = computeZ(phi_offsets(l, :), B);
+    tempEntropy = H(tempImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);
 
@@ -50,18 +51,21 @@ function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K, grad
 
         fprintf('Reducing step size to %d\n', s);
 
-        if (s < convergenceThresh)
-          fprintf('s is below threshold so breaking');
+        if (s < stepMinimum)
+          fprintf('s is below minimum so breaking\n');
           break;
         end
     else
         if (minEntropy - tempEntropy < convergenceThresh) 
-          fprintf('%d - %d = %d < 0.001\n', minEntropy, tempEntropy, minEntropy - tempEntropy);
+          fprintf('Change in entropy (%d - %d = %d) < %d\n', ...
+                   minEntropy, tempEntropy, minEntropy - tempEntropy, ...
+                   convergenceThresh);
           break; % if decreases in entropy are small
         end
 
-        minIdx = l;
-        minEntropy = tempEntropy;
+        minEntropy   = tempEntropy;
+        focusedImage = tempImage;
+
         l = l + 1;
     end
   end
