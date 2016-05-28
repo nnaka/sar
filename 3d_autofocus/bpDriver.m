@@ -10,7 +10,7 @@
 %
 % TODO: Validate parameters (e.g. start=355, delTheta=20 is an unchecked
 % error currently)
-function [image, pulseHistory] = bpDriver(path, pz, start, delTheta)
+function [image, pulseHistory] = bpDriver(path, pz, start, delTheta, noise)
 
 bpData = {};
 image = [];
@@ -37,6 +37,8 @@ for i = start:(start + delTheta - 1)
     % Rule of thumb from paper -- power of 2 is optimized
     bpData.Nfft   = 2 ^ nextpow2(10 * size(data.freq, 1));
     bpData.deltaF = (data.freq(end) - data.freq(1)) / (length(data.freq) - 1);
+    
+    bpData.noise = noise;
 
     [bpData, ph] = bp(bpData);
 
@@ -45,7 +47,7 @@ for i = start:(start + delTheta - 1)
       pulseHistory = ph;
     else
       image = image + bpData.im_final;
-      pulseHistory = horzcat(pulseHistory, ph);
+      pulseHistory = cat(ndims(ph), pulseHistory, ph);
     end
 end
 

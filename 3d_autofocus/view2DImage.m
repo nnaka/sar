@@ -16,8 +16,8 @@ colormap(hAx, gray);
 colorbar;
 set(hAx,'YDir','normal');
 
-if ~isinf(max(image(:)))
-  caxis(hAx, max(image(:)) + [-20 0]);
-end
+% if ~isinf(max(image(:)))
+%   caxis(hAx, max(image(:)) + [-20 0]);
+% end
 
 end

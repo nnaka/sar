@@ -25,7 +25,7 @@ function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K, grad
   addpath('utility');
 
   s                 = 100;  % Step size parameter for gradient descent
-  convergenceThresh = 0.01; % Difference after which iteration "converges"
+  convergenceThresh = 0.001; % Difference after which iteration "converges"
   stepMinimum       = 0.01; % Minimum step size
 
   l = 2; % First iteration is all 0s, so start at iteration 2
@@ -37,6 +37,7 @@ function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K, grad
   focusedImage = computeZ(phi_offsets(l, :), B);
   minEntropy   = H(focusedImage);
   origEntropy  = minEntropy;
+  origImage = focusedImage;
 
   while (1) % phi_offsets(1) = 0
     phi_offsets(l, :) = phi_offsets(l - 1, :) - s * gradFunc(phi_offsets(l - 1, :), B);

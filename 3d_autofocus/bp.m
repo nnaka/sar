@@ -87,6 +87,8 @@ for ii = 1:data.Np
 
   % Update the image using linear interpolation
   contribution = interp1(data.r_vec,rc,dR(I),'linear') .* phCorr(I);
+  contribution = contribution .* exp(1i * (data.noise .* randn(1) + 0)); 
+  
   ph(:, :, ii) = reshape(contribution, size(data.x_mat, 1), size(data.y_mat, 1));
   data.im_final(I) = data.im_final(I) + contribution;
 end
