@@ -12,16 +12,12 @@
 %
 % @param K [Integer] number of pulses to form `B`
 %
-% @param gradFunc [function_handle] Function handle use to compute the gradient
-% of H. This parameter can be one of `grad_h_mex` or `gradH`. Note that the
-% former can be linked against a C++ or a CUDA object file.
-%
 % @return focusedImage [Array] X by Y (by Z) focused image
 % @return minEntropy [Float] entropy of focused `B`
 % @return origEntropy [Float] entropy of unfocused image
 % -----------------------------------------------------------------------------
 % TODO: `delta` should be a parameter to gradFunc
-function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K, gradFunc )
+function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K )
   addpath('utility');
 
   s                 = 100;  % Step size parameter for gradient descent
@@ -32,17 +28,16 @@ function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K, grad
 
   % Holds array of potentially minimizing phase offsets (guessing zero
   % initially). 50 is an arbitrary guess for the number of iterations
-  phi_offsets = zeros(50, K);
+  phiOffsets = zeros(50, K);
 
-  focusedImage = computeZ(phi_offsets(l, :), B);
+  focusedImage = computeZ(phiOffsets(1, :), B);
   minEntropy   = H(focusedImage);
   origEntropy  = minEntropy;
-  origImage = focusedImage;
 
-  while (1) % phi_offsets(1) = 0
-    phi_offsets(l, :) = phi_offsets(l - 1, :) - s * gradFunc(phi_offsets(l - 1, :), B);
+  while (1) % phiOffsets(1) = 0
+    phiOffsets(l, :) = phiOffsets(l - 1, :) - s * gradH(phiOffsets(l - 1, :), B);
 
-    tempImage = computeZ(phi_offsets(l, :), B);
+    tempImage = computeZ(phiOffsets(l, :), B);
     tempEntropy = H(tempImage);
     
     fprintf('tempEntropy = %d, minEntropy = %d\n', tempEntropy, minEntropy);

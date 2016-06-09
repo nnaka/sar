@@ -8,21 +8,23 @@ INCLUDE=-I"/usr/local/cuda-7.5/include" \
 -I"/usr/cots/mathworks/2014a/extern/include" \
 -I"/usr/cots/mathworks/2014a/simulink/include"
 
-all: driver cpp
+cpp: minimize_entropy.o grad_h.o
+	$(MATLAB)/mex CXXFLAGS="$(CXXFLAGS)" grad_h.o minimize_entropy.o minimize_entropy_mex.cpp
 
-driver: grad_h.o
+cuda: minimize_entropy.o grad_h_cuda.o
+	$(MATLAB)/mex CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	INCLUDE="$(INCLUDE)" grad_h_cuda.o minimize_entropy.o minimize_entropy_mex.cpp
+
+grad_h_driver: grad_h.o
 	clang++ $(CXXFLAGS) -lpthread grad_h.o grad_h_driver.cpp -o grad_h_driver
 
-driver_cuda: grad_h_cuda.o
+minimize_driver: minimize_entropy.o grad_h.o
+	clang++ $(CXXFLAGS) -lpthread minimize_entropy.o grad_h.o \
+		minimize_entropy_driver.cpp -o minimize_entropy_driver
+
+grad_h_driver_cuda: grad_h_cuda.o
 	clang++ $(CXXFLAGS) $(INCLUDE) $(LDFLAGS) grad_h_cuda.o grad_h_driver.cpp -o \
 	grad_h_driver_cuda
-
-cpp: grad_h.o
-	$(MATLAB)/mex CXXFLAGS="$(CXXFLAGS)"  grad_h.o grad_h_mex.cpp
-
-cuda: grad_h_cuda.o
-	$(MATLAB)/mex CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	INCLUDE="$(INCLUDE)" grad_h_cuda.o grad_h_mex.cpp
 
 # -----------------------------------------------------------------------------
 # Utilities
@@ -31,6 +33,10 @@ cuda: grad_h_cuda.o
 grad_h.o:
 	clang++ -std=c++11 -O3 -Wall -Wextra -pedantic -fPIC -c grad_h.cpp -o \
 	grad_h.o
+
+minimize_entropy.o:
+	clang++ -std=c++11 -O3 -Wall -Wextra -pedantic -fPIC -c \
+		minimize_entropy.cpp -o minimize_entropy.o
 
 grad_h_cuda.o:
 	/usr/local/cuda/bin/nvcc -O3 -std=c++11 -Xcompiler -fPIC -DNDEBUG -c \

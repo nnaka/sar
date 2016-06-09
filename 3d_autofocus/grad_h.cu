@@ -272,7 +272,7 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   sincos(delta, &sin_delt, &cos_delt);
   computeAlpha<<<(K + nT - 1) / nT, nT>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
 
-  PRINTF("In gradH, about to compute Z\n");
+  PRINTF("In grad_h_cuda, about to compute Z\n");
   PRINTF("Computed Z\n");
 
   size_t num_iter = ceil((float)B_len / B_len_prime);

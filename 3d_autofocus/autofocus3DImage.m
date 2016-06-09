@@ -2,9 +2,10 @@
 % `autofocus3DImage` is a wrapper for gradient descent entropy minimization.
 %
 % @param ph [Array] A 3D pulse history of dimensions X by Y by Z by K.
-% @param gradFunc [function_handle] Function handle use to compute the gradient
-% of H. This parameter can be one of `grad_h_mex` or `gradH`. Note that the
-% former can be linked against a C++ or a CUDA object file.
+% @param minimizer [function_handle] Function handle use to execute gradient
+% descent. This parameter can be one of `minimize_entropy_mex` or
+% `minimizeEntropy`. Note that the former can be linked against a C++ or a CUDA
+% object file.
 %
 % @return image [Array] X by Y by Z focused image
 % @return minEntropy [Float] entropy of focused image
@@ -12,7 +13,7 @@
 % -----------------------------------------------------------------------------
 % TODO: camelCase everything, this is MATLAB, afterall
 % TODO: Validate arguments
-function [ image, minEntropy, origEntropy ] = autofocus3DImage( ph, gradFunc )
+function [ image, minEntropy, origEntropy ] = autofocus3DImage( ph, minimizer )
   X = size(ph, 1);
   Y = size(ph, 2);
   Z = size(ph, 3);
@@ -31,7 +32,7 @@ function [ image, minEntropy, origEntropy ] = autofocus3DImage( ph, gradFunc )
     end
   end
 
-  [focusedImage, minEntropy, origEntropy] = minimizeEntropy(B, K, gradFunc);
+  [focusedImage, minEntropy, origEntropy] = minimizer(B, K);
 
   % `focusedImage` now contains the 1D representation of the entropy-minimized
   % B, constructed using phase offsets `phi_offets(minIdx)`. We must reshape it

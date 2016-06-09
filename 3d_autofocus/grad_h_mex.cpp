@@ -10,8 +10,12 @@
 
 #include "grad_h.h"
 
+#define PHI_OFFSETS_ARG 0
+#define B_ARG           1
+
 /* The gateway function */
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
     double *phi_offsets, *Br, *Bi, *grad;
     size_t K, B_len;
 
@@ -23,33 +27,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mexErrMsgIdAndTxt("Autofocus:image:nlhs", "One output required.");
     }
 
-    if (mxIsComplex(prhs[0])) {
+    if (mxIsComplex(prhs[PHI_OFFSETS_ARG])) {
         mexErrMsgIdAndTxt("Autofocus:image:nrhs",
                 "'phi_offsets' must be real.");
     }
 
-    if (mxGetM(prhs[0]) != 1) {
+    if (mxGetM(prhs[PHI_OFFSETS_ARG]) != 1) {
         mexErrMsgIdAndTxt("Autofocus:image:nrhs",
                 "'phi_offsets' must be a row vector.");
     }
 
-    if (!mxIsComplex(prhs[1]) || mxGetM(prhs[1]) != 1) {
+    if (!mxIsComplex(prhs[B_ARG]) || mxGetM(prhs[B_ARG]) != 1) {
         mexErrMsgIdAndTxt("Autofocus:image:nrhs",
                 "'B' must be complex.");
     }
 
-    if (mxGetM(prhs[1]) != 1) {
+    if (mxGetM(prhs[B_ARG]) != 1) {
         mexErrMsgIdAndTxt("Autofocus:image:nrhs",
                 "'B' must be a row vector.");
     }
 
     // Get pointers to real and imaginary parts of input arrays
-    phi_offsets = mxGetPr(prhs[0]);
-    Br          = mxGetPr(prhs[1]);
-    Bi          = mxGetPi(prhs[1]);
+    phi_offsets = mxGetPr(prhs[PHI_OFFSETS_ARG]);
+    Br          = mxGetPr(prhs[B_ARG]);
+    Bi          = mxGetPi(prhs[B_ARG]);
 
-    K     = mxGetN(prhs[0]);
-    B_len = mxGetN(prhs[1]);
+    K     = mxGetN(prhs[PHI_OFFSETS_ARG]);
+    B_len = mxGetN(prhs[B_ARG]);
 
     plhs[0] = mxCreateDoubleMatrix(1, K, mxREAL);
     grad    = mxGetPr(plhs[0]);

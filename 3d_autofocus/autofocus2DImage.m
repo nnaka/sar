@@ -4,7 +4,7 @@
 %
 % See `autofocus3DImage.m` for parameter documentation.
 % -----------------------------------------------------------------------------
-function [ image, minEntropy, origEntropy ] = autofocus2DImage( ph, gradFunc )
+function [ image, minEntropy, origEntropy ] = autofocus2DImage( ph, minimizer )
   X = size(ph, 1);
   Y = size(ph, 2);
   K = size(ph, 3);
@@ -20,7 +20,7 @@ function [ image, minEntropy, origEntropy ] = autofocus2DImage( ph, gradFunc )
     end
   end
 
-  [focusedImage, minEntropy, origEntropy] = minimizeEntropy(B, K, gradFunc);
+  [focusedImage, minEntropy, origEntropy] = minimizer(B, K);
 
   % `focusedImage` now contains the 1D representation of the entropy-minimized
   % B, constructed using phase offsets `phi_offets(minIdx)`. We must reshape it

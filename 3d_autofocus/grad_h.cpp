@@ -1,6 +1,5 @@
 #include "grad_h.h"
 
-
 #if MATLAB_MEX_FILE
 #include "mex.h"
 #define PRINTF mexPrintf
@@ -24,7 +23,9 @@ inline double entropy(double acc, double Ez)
   return (acc - Ez * log(Ez)) / Ez;
 }
 
-// Returns the entropy of the complex image `Z`
+// Returns the entropy of the complex image specified by `P`, the phase offset
+// vector, and `B` the pulse history. Additionally, `H_not` populates `Zr` and
+// `Zi` with the resulting image.
 double H_not(const double *P, const double *Br, const double *Bi,
         double *Zr, double *Zi, size_t K, size_t B_len)
 {
@@ -46,8 +47,7 @@ double H_not(const double *P, const double *Br, const double *Bi,
         for (size_t k(0); k < K; ++k) {
             a = *Br++;
             b = *Bi++;
-            c = cos(P[k]);
-            d = sin(P[k]);
+            sincos(P[k], &d, &c);
 
             Zr[n] += (a * c + b * d);
             Zi[n] += (b * c - a * d);
@@ -86,18 +86,12 @@ void populate_grad_k(double *grad_i, double H0, const
 
 // TODO: Nice doc comments
 void gradH(double *phi_offsets, const double *Br, const double *Bi,
-        double *grad, size_t K, size_t B_len)
+        double *grad, size_t K, size_t B_len, double H0, double *Zr, double *Zi)
 {
     size_t N = B_len / K;
     assert(B_len % K == 0); // length(B) should always be a multiple of K
 
-    double *Zr = new double[B_len], *Zi = new double[B_len];
     double *Ar = new double[K], *Ai = new double[K];
-
-    PRINTF("In gradH, about to compute Z\n");
-    PRINTF("Computed Z\n");
-    double H0 = H_not(phi_offsets, Br, Bi, Zr, Zi, K, B_len);
-    PRINTF("Computed H_not\n");
 
     // Compute alpha
     double sin_phi, cos_phi;
@@ -129,4 +123,7 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
         while (i > 0) { threads[--i].join(); }
     }
+
+    delete[] Ar;
+    delete[] Ai;
 }
