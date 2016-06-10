@@ -27,8 +27,8 @@ function [ focusedImage, minEntropy, origEntropy ] = minimizeEntropy( B, K )
   l = 2; % First iteration is all 0s, so start at iteration 2
 
   % Holds array of potentially minimizing phase offsets (guessing zero
-  % initially). 50 is an arbitrary guess for the number of iterations
-  phiOffsets = zeros(50, K);
+  % initially). 100 is an arbitrary guess for the number of iterations
+  phiOffsets = zeros(100, K);
 
   focusedImage = computeZ(phiOffsets(1, :), B);
   minEntropy   = H(focusedImage);

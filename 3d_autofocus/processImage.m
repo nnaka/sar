@@ -10,9 +10,10 @@ function processImage( path )
 load(path);
 
 tic
-[focusedImageMatlab, minEntropyMatlab, origEntropyMatlab] = autofocus2DImage(pulseHistory, @minimizeEntropy);
+[focusedImageMatlab, minEntropyMatlab, origEntropyMatlab] = autofocus2DImage(pulseHistory, @minimize_entropy_mex);
 et3 = toc;
 
+fprintf('%s\n', path);
 fprintf('GRADIENT: Min Entropy: %f, Orig Entropy: %f, Elapsed Time: %f\n', minEntropyMatlab, origEntropyMatlab, et3);
 
 end
