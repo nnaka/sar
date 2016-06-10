@@ -17,6 +17,10 @@ cuda: minimize_entropy.o grad_h_cuda.o entropy.o
 	INCLUDE="$(INCLUDE)" entropy.o grad_h_cuda.o minimize_entropy.o \
 	minimize_entropy_mex.cpp
 
+# -----------------------------------------------------------------------------
+# Drivers
+# -----------------------------------------------------------------------------
+
 grad_h_driver: grad_h.o
 	clang++ $(CXXFLAGS) -lpthread grad_h.o grad_h_driver.cpp -o grad_h_driver
 

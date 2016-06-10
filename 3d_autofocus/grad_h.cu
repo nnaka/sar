@@ -1,19 +1,9 @@
 #include "grad_h.h"
 
-#if MATLAB_MEX_FILE
-#include "mex.h"
-#define PRINTF mexPrintf
-#else
-#define PRINTF printf
-#endif
-
 #include <cmath>
 #include <vector>
 #include <thread>
 #include <assert.h>
-
-#include <cuda_runtime.h>
-#include <cublas_v2.h>
 
 using namespace std;
 
@@ -189,50 +179,8 @@ __global__ void computeGrad(double *grad, const double *acc, const double *Ez, d
   }
 }
 
-// Returns the entropy of the complex image `Z`
-void H_not(const double *d_P, double *d_Br, double *d_Bi, double *Zr, double
-    *Zi, double *Ez, double *acc, size_t K, size_t B_len)
-{
-  const size_t N = B_len / K;
-
-  assert(B_len % K == 0); // length(B) should always be a multiple of K
-
-  double *d_Z_mag = NULL;
-  checkCuda(cudaMalloc((void **)&d_Z_mag, N * sizeof(double)));
-
-  kernelSum<double><<<N, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, Zr, Zi, K, d_Z_mag, d_P);
-
-  int bs = (N + nT - 1) / nT; // cheap ceil()
-
-  double *d_accum = NULL;
-  double *accum = NULL;
-
-  checkCuda(cudaMallocHost((void **)&accum, bs * sizeof(double)));
-  checkCuda(cudaMalloc((void **)&d_accum, bs * sizeof(double)));
-
-  cublasHandle_t handle;
-
-  cublasCreate(&handle);
-  cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_HOST);
-
-  // cublasDasum sums the absolute values, but Z_mag is always positive so this
-  // is correct
-  double sum = 0;
-  cublasDasum(handle, N, d_Z_mag, 1, &sum);
-  *Ez += sum;
-
-  computeEntropy<double><<<bs, nT, nT * sizeof(double)>>>(d_Z_mag, d_accum, N);
-  checkCuda(cudaMemcpy(accum, d_accum, bs * sizeof(double), cudaMemcpyDeviceToHost));
-  for (size_t b(0); b < bs; ++b) { *acc += accum[b]; }
-
-  checkCuda(cudaFree(d_Z_mag));
-  checkCuda(cudaFree(d_accum));
-  cublasDestroy(handle);
-}
-
-// TODO: Nice doc comments
 void gradH(double *phi_offsets, const double *Br, const double *Bi,
-    double *grad, size_t K, size_t B_len)
+    double *grad, size_t K, size_t B_len, double H0, double *Zr, double *Zi)
 {
   // const auto maxMem = 2147483648 / 2; // 1 GB - size of half of GPU physical memory
   const size_t N = B_len / K;
@@ -245,7 +193,6 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   size_t B_len_prime = N_prime * K;
 
   double *d_Br, *d_Bi, *d_P, *d_Zr, *d_Zi, *d_Ez, *d_acc, *d_Ar, *d_Ai, *d_grad;
-  double Ez = 0, acc = 0;
 
   // TODO: Use pinned memory
   checkCuda(cudaMalloc((void **)&d_P,  K * sizeof(double)));
@@ -272,9 +219,6 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
   sincos(delta, &sin_delt, &cos_delt);
   computeAlpha<<<(K + nT - 1) / nT, nT>>>(d_P, sin_delt, cos_delt, d_Ar, d_Ai, K);
 
-  PRINTF("In grad_h_cuda, about to compute Z\n");
-  PRINTF("Computed Z\n");
-
   size_t num_iter = ceil((float)B_len / B_len_prime);
 
   for (size_t i(0); i < num_iter; ++i)
@@ -283,15 +227,15 @@ void gradH(double *phi_offsets, const double *Br, const double *Bi,
 
     checkCuda(cudaMemcpy(d_Br, &Br[i * B_len_prime], len * sizeof(double), cudaMemcpyHostToDevice));
     checkCuda(cudaMemcpy(d_Bi, &Bi[i * B_len_prime], len * sizeof(double), cudaMemcpyHostToDevice));
+    checkCuda(cudaMemcpy(&d_Zr[i * N_prime], &Zr[i * N_prime], (len / K) * sizeof(double), cudaMemcpyHostToDevice));
+    checkCuda(cudaMemcpy(&d_Zi[i * N_prime], &Zi[i * N_prime], (len / K) * sizeof(double), cudaMemcpyHostToDevice));
 
-    H_not(d_P, d_Br, d_Bi, &d_Zr[i * N_prime], &d_Zi[i * N_prime], &Ez, &acc, K, len);
     computeEz<double><<<K, nT, 2 * nT * sizeof(double)>>>(d_Br, d_Bi, &d_Zr[i * N_prime], &d_Zi[i * N_prime], d_Ar, d_Ai, d_Ez, d_acc, len / K, K);
   }
 
-  double H0 = -entropy(acc, Ez);
-  PRINTF("Computed H_not=%f\n", H0);
-
   computeGrad<<<(K + nT - 1) / nT, nT>>>(d_grad, d_acc, d_Ez, H0, delta, K);
+
+  // Copy return values back to host
   checkCuda(cudaMemcpy(grad, d_grad, K * sizeof(double), cudaMemcpyDeviceToHost));
 
   checkCuda(cudaFree(d_Br));
