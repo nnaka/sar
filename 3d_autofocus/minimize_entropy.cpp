@@ -9,6 +9,7 @@
 #endif
 
 #include "grad_h.h"
+#include "entropy.h"
 #include <vector>
 #include <cmath>
 
