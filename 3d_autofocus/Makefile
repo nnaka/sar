@@ -24,8 +24,8 @@ cuda: minimize_entropy.o grad_h_cuda.o entropy.o
 grad_h_driver: grad_h.o
 	clang++ $(CXXFLAGS) -lpthread grad_h.o grad_h_driver.cpp -o grad_h_driver
 
-minimize_driver: minimize_entropy.o grad_h.o
-	clang++ $(CXXFLAGS) -lpthread minimize_entropy.o grad_h.o \
+minimize_driver: minimize_entropy.o grad_h.o entropy.o
+	clang++ $(CXXFLAGS) -lpthread entropy.o minimize_entropy.o grad_h.o \
 		minimize_entropy_driver.cpp -o minimize_entropy_driver
 
 grad_h_driver_cuda: grad_h_cuda.o
@@ -53,4 +53,4 @@ grad_h_cuda.o:
 	grad_h.cu -o grad_h_cuda.o
 
 clean:
-	rm -f *.o grad_h_driver grad_h_driver_cuda *.mex*
+	rm -f *.o grad_h_driver grad_h_driver_cuda minimize_entropy_driver *.mex*

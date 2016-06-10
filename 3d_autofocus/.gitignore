@@ -7,3 +7,4 @@ callgrind*
 data
 *.log
 grad_h_driver_cuda
+minimize_entropy_driver
