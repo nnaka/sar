@@ -38,7 +38,7 @@ void minimize_entropy(double *focusedImageR, double *focusedImageI, double
     // initially). 50 is an arbitrary guess for the number of iterations
     vector< vector<double> > phiOffsets(maxIter, vector<double>(K, 0));
 
-    *minEntropy = H_not(&(phiOffsets[0])[0], Br, Bi,
+    *minEntropy = H(&(phiOffsets[0])[0], Br, Bi,
             focusedImageR, focusedImageI, K, N * K);
     *origEntropy = *minEntropy;
 
@@ -57,7 +57,7 @@ void minimize_entropy(double *focusedImageR, double *focusedImageI, double
             phiOffsets[l][k] = phiOffsets[l - 1][k] - s * grad[k];
         }
 
-        tempEntropy = H_not(&(phiOffsets[l])[0], Br, Bi,
+        tempEntropy = H(&(phiOffsets[l])[0], Br, Bi,
                 tempImageR, tempImageI, K, N * K);
 
         PRINTF("tempEntropy = %f, minEntropy = %f\n", tempEntropy, *minEntropy);

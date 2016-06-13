@@ -8,7 +8,7 @@ inline double entropy(double acc, double Ez)
   return (acc - Ez * log(Ez)) / Ez;
 }
 
-double H_not(const double *P, const double *Br, const double *Bi,
+double H(const double *P, const double *Br, const double *Bi,
         double *Zr, double *Zi, size_t K, size_t B_len)
 {
     size_t N = B_len / K;
