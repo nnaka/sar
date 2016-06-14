@@ -15,5 +15,5 @@
 // @param acc [Scalar] populated with the summation portion of H
 // @param K [Scalar] number of pulses in the pulse history
 // @param B_len [Scalar] size of the pulse history (determines N)
-float H(const float *P, const float *Br, const float *Bi,
-        float *Zr, float *Zi, size_t K, size_t B_len);
+double H(const double *P, const double *Br, const double *Bi,
+        double *Zr, double *Zi, size_t K, size_t B_len);

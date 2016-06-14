@@ -18,14 +18,14 @@ using namespace std;
 static const auto nthreads = 64 - 1;
 static thread threads[nthreads];
 
-inline float entropy(double acc, double Ez)
+inline double entropy(double acc, double Ez)
 {
   return (acc - Ez * log(Ez)) / Ez;
 }
 
-void populate_grad_k(float *grad_i, float H0, const
-        float *Br, const float *Bi, const float *Zr, const float *Zi, float
-        Ar, float Ai, size_t K, size_t N, size_t k)
+void populate_grad_k(double *grad_i, double H0, const
+        double *Br, const double *Bi, const double *Zr, const double *Zi, double
+        Ar, double Ai, size_t K, size_t N, size_t k)
 {
     double Ez = 0, acc = 0;
 
@@ -43,22 +43,22 @@ void populate_grad_k(float *grad_i, float H0, const
 }
 
 // TODO: Nice doc comments
-void gradH(float *phi_offsets, const float *Br, const float *Bi,
-        float *grad, size_t K, size_t B_len, float H0, float *Zr, float *Zi)
+void gradH(double *phi_offsets, const double *Br, const double *Bi,
+        double *grad, size_t K, size_t B_len, double H0, double *Zr, double *Zi)
 {
     size_t N = B_len / K;
     assert(B_len % K == 0); // length(B) should always be a multiple of K
 
-    float *Ar = new float[K], *Ai = new float[K];
+    double *Ar = new double[K], *Ai = new double[K];
 
     // Compute alpha
-    float sin_phi, cos_phi;
-    float sin_delt, cos_delt;
+    double sin_phi, cos_phi;
+    double sin_delt, cos_delt;
     
-    sincosf(delta, &sin_delt, &cos_delt);
+    sincos(delta, &sin_delt, &cos_delt);
 
     for (size_t k(0); k < K; ++k) {
-        sincosf(phi_offsets[k], &sin_phi, &cos_phi);
+        sincos(phi_offsets[k], &sin_phi, &cos_phi);
 
         Ar[k] = (-sin_delt) * sin_phi + cos_delt * cos_phi - cos_phi;
         Ai[k] = sin_delt * (-cos_phi) - cos_delt * sin_phi + sin_phi;

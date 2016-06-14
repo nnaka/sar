@@ -9,8 +9,8 @@
 
 using namespace std;
 
-float drand() {
-    return (float)rand() / (float)rand();
+double drand() {
+    return (double)rand() / (double)rand();
 }
 
 int main() {
@@ -18,12 +18,12 @@ int main() {
     const size_t N = 501 * 501;
     const size_t B_len = N * K;
 
-    float *Br = new float[B_len];
-    float *Bi = new float[B_len];
+    double *Br = new double[B_len];
+    double *Bi = new double[B_len];
 
-    float *focusedImageR = new float[N];
-    float *focusedImageI = new float[N];
-    float minEntropy = 0, origEntropy = 0;
+    double *focusedImageR = new double[N];
+    double *focusedImageI = new double[N];
+    double minEntropy = 0, origEntropy = 0;
 
     srand(7);
 

@@ -5,8 +5,6 @@
 % See `autofocus3DImage.m` for parameter documentation.
 % -----------------------------------------------------------------------------
 function [ image, minEntropy, origEntropy ] = autofocus2DImage( ph, minimizer )
-  ph = single(ph); % Use floats to save memory
-
   X = size(ph, 1);
   Y = size(ph, 2);
   K = size(ph, 3);
