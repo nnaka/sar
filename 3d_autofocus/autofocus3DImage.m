@@ -14,6 +14,8 @@
 % TODO: camelCase everything, this is MATLAB, afterall
 % TODO: Validate arguments
 function [ image, minEntropy, origEntropy ] = autofocus3DImage( ph, minimizer )
+  ph = single(ph); % Use floats to save memory
+
   X = size(ph, 1);
   Y = size(ph, 2);
   Z = size(ph, 3);

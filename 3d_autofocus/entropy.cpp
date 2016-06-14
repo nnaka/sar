@@ -3,33 +3,33 @@
 #include <cmath>
 #include "assert.h"
 
-inline double entropy(double acc, double Ez)
+inline float entropy(float acc, float Ez)
 {
   return (acc - Ez * log(Ez)) / Ez;
 }
 
-double H(const double *P, const double *Br, const double *Bi,
-        double *Zr, double *Zi, size_t K, size_t B_len)
+float H(const float *P, const float *Br, const float *Bi,
+        float *Zr, float *Zi, size_t K, size_t B_len)
 {
     size_t N = B_len / K;
-    double Ez = 0;
+    float Ez = 0;
 
     assert(B_len % K == 0); // length(B) should always be a multiple of K
 
-    double *Z_mag = new double[N];
+    float *Z_mag = new float[N];
 
     // ------------------------------------------------------------------------
     // Form Z_mag
     // ------------------------------------------------------------------------
-    double a, b, c, d;
-    double acc = 0;
+    float a, b, c, d;
+    float acc = 0;
     for (size_t n = 0; n < N; ++n) {
         Zr[n] = 0; Zi[n] = 0;
 
         for (size_t k(0); k < K; ++k) {
             a = *Br++;
             b = *Bi++;
-            sincos(P[k], &d, &c);
+            sincosf(P[k], &d, &c);
 
             Zr[n] += (a * c + b * d);
             Zi[n] += (b * c - a * d);

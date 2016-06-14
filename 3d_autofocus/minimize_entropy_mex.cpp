@@ -34,9 +34,9 @@
 /* The gateway function */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    double *focusedImageR, *focusedImageI, *minEntropy, *origEntropy;
+    float *focusedImageR, *focusedImageI, *minEntropy, *origEntropy;
 
-    double *Br, *Bi;
+    float *Br, *Bi;
     size_t K, B_len, N;
 
     if (nrhs != 2) {
@@ -49,14 +49,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // TODO: Validate `K`
 
-    if (!mxIsComplex(prhs[B_ARG]) || mxGetM(prhs[B_ARG]) != 1) {
+    if (!mxIsComplex(prhs[B_ARG]) || mxGetM(prhs[B_ARG]) != 1 ||
+            !mxIsSingle(prhs[B_ARG])) {
         mexErrMsgIdAndTxt("minimizeEntropy:nrhs",
-                "'B' must be complex.");
+                "'B' must be complex and single precision.");
     }
 
     // Assign to each input
-    Br = mxGetPr(prhs[B_ARG]);
-    Bi = mxGetPi(prhs[B_ARG]);
+    // NOTE: We cast to float * with the assumption that the underlying data
+    // types are actually floats and not doubles
+    Br = (float *)mxGetData(prhs[B_ARG]);
+    Bi = (float *)mxGetImagData(prhs[B_ARG]);
     K     = mxGetScalar(prhs[K_ARG]);
     B_len = mxGetN(prhs[B_ARG]);
 
@@ -65,9 +68,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     N = B_len / K;
 
     // Allocate return arguments
-    plhs[FOC_IMAGE] = mxCreateDoubleMatrix(1, N, mxCOMPLEX);
-    plhs[MIN_ENTR]  = mxCreateDoubleMatrix(1, 1, mxREAL);
-    plhs[ORIG_ENTR] = mxCreateDoubleMatrix(1, 1, mxREAL);
+    plhs[FOC_IMAGE] = mxCreateNumericMatrix(1, N, mxSINGLE_CLASS, mxCOMPLEX);
+    plhs[MIN_ENTR]  = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
+    plhs[ORIG_ENTR] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
 
     if (plhs[FOC_IMAGE] == NULL) {
         mexErrMsgIdAndTxt("minimizeEntropy:plhs",
@@ -75,11 +78,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     // Assign to each output
-    focusedImageR = mxGetPr(plhs[FOC_IMAGE]);
-    focusedImageI = mxGetPi(plhs[FOC_IMAGE]);
+    // NOTE: We cast to float * with the assumption that the underlying data
+    // types are actually floats and not doubles
+    focusedImageR = (float *)mxGetData(plhs[FOC_IMAGE]);
+    focusedImageI = (float *)mxGetImagData(plhs[FOC_IMAGE]);
 
-    minEntropy    = mxGetPr(plhs[MIN_ENTR]);
-    origEntropy   = mxGetPr(plhs[ORIG_ENTR]);
+    minEntropy    = (float *)mxGetData(plhs[MIN_ENTR]);
+    origEntropy   = (float *)mxGetData(plhs[ORIG_ENTR]);
 
     minimize_entropy(focusedImageR, focusedImageI, minEntropy, origEntropy,
             Br, Bi, K, N);

@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-const double delta = 1e-3;
+const float delta = 1e-3;
 
 // Computes the gradient of the entropy function, H, by finite difference
 // approximation
@@ -16,6 +16,6 @@ const double delta = 1e-3;
 // @param B_len [Scalar] size of the pulse history (determines N)
 // @param Zr [N array] populated with the real parts of the image Z
 // @param Zi [N array] populated with the imaginary parts of the image Z
-void gradH(double *phi_offsets, const double *Br, const double *Bi,
-        double *grad, std::size_t K, std::size_t B_len,
-        double H0, double *Zr, double *Zi);
+void gradH(float *phi_offsets, const float *Br, const float *Bi,
+        float *grad, std::size_t K, std::size_t B_len,
+        float H0, float *Zr, float *Zi);

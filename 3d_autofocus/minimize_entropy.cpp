@@ -15,13 +15,13 @@
 
 using namespace std;
 
-inline double entropy(double acc, double Ez)
+inline float entropy(float acc, float Ez)
 {
   return (acc - Ez * log(Ez)) / Ez;
 }
 
-void minimize_entropy(double *focusedImageR, double *focusedImageI, double
-        *minEntropy, double *origEntropy, double *Br, double *Bi, size_t K,
+void minimize_entropy(float *focusedImageR, float *focusedImageI, float
+        *minEntropy, float *origEntropy, float *Br, float *Bi, size_t K,
         size_t N)
 {
     // Step size parameter for gradient descent
@@ -36,16 +36,16 @@ void minimize_entropy(double *focusedImageR, double *focusedImageI, double
 
     // Holds array of potentially minimizing phase offsets (guessing zero
     // initially). 50 is an arbitrary guess for the number of iterations
-    vector< vector<double> > phiOffsets(maxIter, vector<double>(K, 0));
+    vector< vector<float> > phiOffsets(maxIter, vector<float>(K, 0));
 
     *minEntropy = H(&(phiOffsets[0])[0], Br, Bi,
             focusedImageR, focusedImageI, K, N * K);
     *origEntropy = *minEntropy;
 
-    double *grad = new double[K];
+    float *grad = new float[K];
 
-    double *tempImageR = new double[N], *tempImageI = new double[N];
-    double tempEntropy = *minEntropy;
+    float *tempImageR = new float[N], *tempImageI = new float[N];
+    float tempEntropy = *minEntropy;
 
     while (l < maxIter) {
         // Compute `grad`
