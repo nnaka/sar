@@ -45,7 +45,7 @@ int main() {
 
     for (int i = 0; i < 1; ++i) {
         printf("Iteration %d\n", i);
-        gradH(P, Br, Bi, grad, K, B_len, 2, Zr, Zi);
+        gradH(P, Br, Bi, grad, K, B_len, Zr, Zi);
 
         for (size_t i(K - 10); i < K; ++i) {
             printf("grad[%lu]=%f\n", i, grad[i]);

@@ -1,13 +1,5 @@
 #include "grad_h.h"
 
-#if MATLAB_MEX_FILE
-#include "mex.h"
-#define PRINTF mexPrintf
-#else
-#include <stdio.h>
-#define PRINTF printf
-#endif
-
 #include <cmath>
 #include <vector>
 #include <thread>
@@ -18,70 +10,47 @@ using namespace std;
 static const auto nthreads = 64 - 1;
 static thread threads[nthreads];
 
-inline double entropy(double acc, double Ez)
+// TODO: Nice doc comments
+void populate_grad_k(double *grad_i, const double *Br, const double *Bi, const
+        double *Zr, const double *Zi,
+        double phi_i, size_t K, size_t N, size_t i)
 {
-  return (acc - Ez * log(Ez)) / Ez;
-}
-
-void populate_grad_k(double *grad_i, double H0, const
-        double *Br, const double *Bi, const double *Zr, const double *Zi, double
-        Ar, double Ai, size_t K, size_t N, size_t k)
-{
-    double Ez = 0, acc = 0;
+    double sin_phi, cos_phi;
+    sincos(phi_i, &sin_phi, &cos_phi);
 
     for (size_t n(0); n < N; ++n) {
-        double Zn_r = Ar * Br[n * K + k] - Ai * Bi[n * K + k] + Zr[n];
-        double Zn_i = Ar * Bi[n * K + k] + Ai * Br[n * K + k] + Zi[n];
+        double Z_mag = Zr[n] * Zr[n] + Zi[n] * Zi[n];
+        double derZ_mag = 4 *
+            (Br[n * K + i] * cos_phi + Bi[n * K + i] * sin_phi) * 
+            (Bi[n * K + i] * cos_phi - Br[n * K + i] * sin_phi);
 
-        double Zn_mag = Zn_r * Zn_r + Zn_i * Zn_i;
-
-        Ez += Zn_mag;
-        acc += Zn_mag * log(Zn_mag);
+        assert(Z_mag > 0);
+        *grad_i += derZ_mag * (1 + log(Z_mag));
     }
-
-    *grad_i = (-entropy(acc, Ez) - H0) / delta;
 }
 
 // TODO: Nice doc comments
-void gradH(double *phi_offsets, const double *Br, const double *Bi,
-        double *grad, size_t K, size_t B_len, double H0, double *Zr, double *Zi)
+void gradH(double *P, const double *Br, const double *Bi,
+        double *grad, size_t K, size_t B_len, double *Zr, double *Zi)
 {
     size_t N = B_len / K;
     assert(B_len % K == 0); // length(B) should always be a multiple of K
-
-    double *Ar = new double[K], *Ai = new double[K];
-
-    // Compute alpha
-    double sin_phi, cos_phi;
-    double sin_delt, cos_delt;
-    
-    sincos(delta, &sin_delt, &cos_delt);
-
-    for (size_t k(0); k < K; ++k) {
-        sincos(phi_offsets[k], &sin_phi, &cos_phi);
-
-        Ar[k] = (-sin_delt) * sin_phi + cos_delt * cos_phi - cos_phi;
-        Ai[k] = sin_delt * (-cos_phi) - cos_delt * sin_phi + sin_phi;
-    }
 
     size_t k(0);
     while (k < K) {
         int i;
         for (i = 0; i < nthreads && k < K; ++i) {
-            threads[i] = thread(populate_grad_k, grad++, H0,
-                        Br, Bi, Zr, Zi, Ar[k], Ai[k], K, N, k);
+            threads[i] = thread(populate_grad_k, grad++,
+                        Br, Bi, Zr, Zi, P[k], K, N, k);
             ++k;
         }
 
         // Keep main thread busy but only if we have more to do
         if (k < K) {
-            populate_grad_k(grad++, H0, Br, Bi, Zr, Zi, Ar[k], Ai[k], K, N, k);
+            populate_grad_k(grad++, Br, Bi, Zr, Zi, P[k], K, N, k);
             ++k;
         }
 
         while (i > 0) { threads[--i].join(); }
     }
-
-    delete[] Ar;
-    delete[] Ai;
 }

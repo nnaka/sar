@@ -25,11 +25,11 @@ void minimize_entropy(double *focusedImageR, double *focusedImageI, double
         size_t N)
 {
     // Step size parameter for gradient descent
-    auto s                       = 100;
+    auto s                       = (int)1e7;
     // Difference after which iteration "converges"
-    auto const convergenceThresh = 0.001;
+    auto const convergenceThresh = 0.000001;
     // Minimum step size
-    auto const stepMinimum       = 0.01;
+    auto const stepMinimum       = 100000;
     auto const maxIter           = 100;
 
     auto l = 1; // First iteration is all 0s, so start at iteration 1
@@ -50,7 +50,7 @@ void minimize_entropy(double *focusedImageR, double *focusedImageI, double
     while (l < maxIter) {
         // Compute `grad`
         gradH(&(phiOffsets[l - 1])[0], Br, Bi, grad, K, N * K,
-                tempEntropy, focusedImageR, focusedImageI);
+                focusedImageR, focusedImageI);
 
         // Compute new phase offsets after descending down gradient
         for (size_t k = 0; k < K; ++k) {
