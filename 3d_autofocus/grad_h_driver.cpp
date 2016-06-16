@@ -14,21 +14,28 @@ double drand() {
 }
 
 int main() {
-    const size_t K     = 10000;
-    const size_t B_len = K * 22 * 22 * 22;
+    const size_t K     = 100;
+    const size_t N     = 501 * 501;
+    const size_t B_len = K * N;
 
-    double *pr = new double[K];
-    double *pi = new double[K];
+    double *P = new double[K];
     double *Br = new double[B_len];
     double *Bi = new double[B_len];
+
+    double *Zr = new double[N];
+    double *Zi = new double[N];
 
     double *grad = new double[K];
 
     srand(7);
 
+    for (size_t n = 0; n < N; ++n) {
+        Zr[n] = drand();
+        Zi[n] = drand();
+    }
+
     for (size_t k = 0; k < K; ++k) {
-        pr[k] = drand();
-        pi[k] = drand();
+        P[k] = drand();
     }
 
     for (size_t b = 0; b < B_len; ++b) {
@@ -38,17 +45,18 @@ int main() {
 
     for (int i = 0; i < 1; ++i) {
         printf("Iteration %d\n", i);
-        gradH(pi, Br, Bi, grad, K, B_len);
+        gradH(P, Br, Bi, grad, K, B_len, 2, Zr, Zi);
 
         for (size_t i(K - 10); i < K; ++i) {
             printf("grad[%lu]=%f\n", i, grad[i]);
         }
     }
 
-    delete[] pr;
-    delete[] pi;
+    delete[] P;
     delete[] Br;
     delete[] Bi;
+    delete[] Zr;
+    delete[] Zi;
     delete[] grad;
 
     return 0;
